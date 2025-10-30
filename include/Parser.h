@@ -10,7 +10,6 @@ class Parser {
 public:
   Parser(std::vector<Token> tokens);
   std::vector<std::unique_ptr<Expr>> parse();
-  std::unique_ptr<Expr> doParse();
 
   enum class Precedence {
     PREC_NONE,
@@ -50,6 +49,8 @@ private:
   void error(const std::string message);
 
   std::unique_ptr<Expr> parsePrecedence(Precedence precedence);
+  std::unique_ptr<Expr> declaration();
+  std::unique_ptr<Expr> varDeclaration();
   std::unique_ptr<Expr> statement();
   std::unique_ptr<Expr> expressionStatement();
   std::unique_ptr<Expr> expression();

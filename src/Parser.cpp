@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include "Lexer.h"
 #include "TokenType.h"
@@ -39,7 +40,7 @@ std::vector<std::unique_ptr<Expr>> Parser::parse() {
 
   try {
     while (!isAtEnd()) {
-      std::unique_ptr<Expr> expr = doParse();
+      std::unique_ptr<Expr> expr = declaration();
       exprs.push_back(std::move(expr));
     }
   } catch (const ParserError &parseError) {
@@ -48,13 +49,33 @@ std::vector<std::unique_ptr<Expr>> Parser::parse() {
   return std::move(exprs);
 }
 
-std::unique_ptr<Expr> Parser::doParse() { return statement(); }
+std::unique_ptr<Expr> Parser::declaration() {
+  if (match(TokenType::TOKEN_VAR)) {
+    return varDeclaration();
+  } else {
+    return statement();
+  }
+}
+
+std::unique_ptr<Expr> Parser::varDeclaration() {
+  consume(TokenType::TOKEN_IDENTIFIER, "Expect variable name");
+  std::string varName = current.lexeme;
+
+  std::unique_ptr<Expr> rhs = nullptr;
+  if (match(TokenType::TOKEN_EQUAL)) {
+    rhs = expression();
+  }
+
+  consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+
+  return std::make_unique<VarExpr>(varName, std::move(rhs));
+}
 
 std::unique_ptr<Expr> Parser::statement() { return expressionStatement(); }
 
 std::unique_ptr<Expr> Parser::expressionStatement() {
   std::unique_ptr<Expr> expr = expression();
-  consume(TokenType::TOKEN_SEMICOLON, "Expected ';' after expression.");
+  consume(TokenType::TOKEN_SEMICOLON, "Expected ';' after expression");
 
   return expr;
 }
@@ -117,10 +138,10 @@ std::unique_ptr<Expr> Parser::parseNud(const Token &token) {
   }
 
   case TokenType::TOKEN_IDENTIFIER:
-    return std::make_unique<VarExpr>(token.lexeme);
+    return std::make_unique<VarExpr>(token.lexeme, nullptr);
 
   default:
-    throw ParserError("Unexpected right expression.");
+    throw ParserError("Unexpected right expression");
   }
 }
 
@@ -149,7 +170,8 @@ Token Parser::peek() const {
 }
 
 void Parser::error(std::string message) {
-  std::cerr << "ParserError: " << message << std::endl;
+  std::cerr << "ParserError: " << message << ": '" << current.lexeme << "'"
+            << std::endl;
   hadError = true;
 }
 

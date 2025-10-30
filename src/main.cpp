@@ -21,11 +21,14 @@ static void run(char *line) {
   std::vector<Token> tokens = lexer.scanTokens();
 
 #ifdef DEBUG_TOKENS
+  std::cout << "\n======= Lexer =========\n";
   for (Token t : tokens) {
     if (t.type != TokenType::TOKEN_EOF) {
-      std::cout << t.lexeme << " " << tokenTypeToString(t.type) << std::endl;
+      std::cout << "    " << t.lexeme << "\t" << tokenTypeToString(t.type)
+                << std::endl;
     }
   }
+  std::cout << "=======================\n" << std::endl;
 #endif
 
   Parser parser(tokens);
@@ -33,11 +36,13 @@ static void run(char *line) {
   std::vector<std::unique_ptr<Expr>> expressions = parser.parse();
 
 #ifdef DEBUG_PARSER
+  std::cout << "======= Parser ========\n";
   for (const auto &expr : expressions)
     if (expr) {
       expr->print(std::cout);
+      std::cout << std::endl;
     }
-  std::cout << std::endl;
+  std::cout << "=======================" << std::endl;
 #endif
 }
 
