@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "Lexer.h"
+#include "TokenType.h"
 #include "expressions/Expr.h"
 
 class BinaryExpr : public Expr {
@@ -18,7 +19,7 @@ public:
   virtual void print(std::ostream &builder) const override {
     builder << "(";
     mLeft->print(builder);
-    builder << " " << tokenTypeToString(mOperator) << " ";
+    builder << " " << tokenToOperator(mOperator) << " ";
     mRight->print(builder);
     builder << ")";
   }

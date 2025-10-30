@@ -2,6 +2,7 @@
 #define PREFIX_EXPR_H
 
 #include "Lexer.h"
+#include "TokenType.h"
 #include "expressions/Expr.h"
 #include <memory>
 #include <ostream>
@@ -12,7 +13,7 @@ public:
       : mOperator(operatorType), mRight(std::move(right)) {};
 
   virtual void print(std::ostream &builder) const override {
-    builder << "(" << tokenTypeToString(mOperator);
+    builder << "(" << tokenToOperator(mOperator);
     mRight->print(builder);
     builder << ")";
   }

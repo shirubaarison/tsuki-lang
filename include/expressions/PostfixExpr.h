@@ -2,6 +2,7 @@
 #define POSTFIX_EXPR_H
 
 #include "Lexer.h"
+#include "TokenType.h"
 #include "expressions/Expr.h"
 #include <memory>
 #include <ostream>

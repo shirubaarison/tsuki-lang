@@ -1,4 +1,5 @@
 #include "Lexer.h"
+#include "TokenType.h"
 
 static bool isAlpha(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
@@ -6,25 +7,26 @@ static bool isAlpha(char c) {
 
 static bool isDigit(char c) { return c >= '0' && c <= '9'; }
 
-Lexer::Lexer(std::string source)
-    : source(std::move(source)), start(this->source.begin()),
-      current(this->source.begin()), line(1) {
-  keywords.emplace("and", TOKEN_AND);
-  keywords.emplace("class", TOKEN_CLASS);
-  keywords.emplace("else", TOKEN_ELSE);
-  keywords.emplace("false", TOKEN_FALSE);
-  keywords.emplace("for", TOKEN_FOR);
-  keywords.emplace("fun", TOKEN_FUN);
-  keywords.emplace("if", TOKEN_IF);
-  keywords.emplace("nil", TOKEN_NIL);
-  keywords.emplace("or", TOKEN_OR);
-  keywords.emplace("print", TOKEN_PRINT);
-  keywords.emplace("return", TOKEN_RETURN);
-  keywords.emplace("super", TOKEN_SUPER);
-  keywords.emplace("this", TOKEN_THIS);
-  keywords.emplace("true", TOKEN_TRUE);
-  keywords.emplace("var", TOKEN_VAR);
-  keywords.emplace("while", TOKEN_WHILE);
+Lexer::Lexer(std::string source) : source(std::move(source)), line(1) {
+  start = this->source.begin();
+  current = this->source.begin();
+
+  keywords.emplace("and", TokenType::TOKEN_AND);
+  keywords.emplace("class", TokenType::TOKEN_CLASS);
+  keywords.emplace("else", TokenType::TOKEN_ELSE);
+  keywords.emplace("false", TokenType::TOKEN_FALSE);
+  keywords.emplace("for", TokenType::TOKEN_FOR);
+  keywords.emplace("fun", TokenType::TOKEN_FUN);
+  keywords.emplace("if", TokenType::TOKEN_IF);
+  keywords.emplace("nil", TokenType::TOKEN_NIL);
+  keywords.emplace("or", TokenType::TOKEN_OR);
+  keywords.emplace("print", TokenType::TOKEN_PRINT);
+  keywords.emplace("return", TokenType::TOKEN_RETURN);
+  keywords.emplace("super", TokenType::TOKEN_SUPER);
+  keywords.emplace("this", TokenType::TOKEN_THIS);
+  keywords.emplace("true", TokenType::TOKEN_TRUE);
+  keywords.emplace("var", TokenType::TOKEN_VAR);
+  keywords.emplace("while", TokenType::TOKEN_WHILE);
 }
 
 bool Lexer::isAtEnd() { return current == source.end(); }
@@ -41,7 +43,7 @@ Token Lexer::makeToken(TokenType type) {
 
 Token Lexer::errorToken(std::string message) {
   Token token;
-  token.type = TOKEN_ERROR;
+  token.type = TokenType::TOKEN_ERROR;
   token.lexeme = message;
   token.line = line;
 
@@ -49,31 +51,33 @@ Token Lexer::errorToken(std::string message) {
 }
 
 char Lexer::advance() {
-  if (isAtEnd())
+  if (isAtEnd()) {
     return '\0';
+  }
 
   return *current++;
 }
 
 char Lexer::peek() {
-  if (isAtEnd())
+  if (isAtEnd()) {
     return '\0';
+  }
 
   return *current;
 }
 
 char Lexer::peekNext() {
-  if (current + 1 == source.end())
+  if (current + 1 == source.end()) {
     return '\0';
+  }
 
   return *(current + 1);
 }
 
 bool Lexer::match(char expected) {
-  if (isAtEnd())
+  if (isAtEnd() || *current != expected) {
     return false;
-  if (*current != expected)
-    return false;
+  }
 
   current++;
   return true;
@@ -87,7 +91,7 @@ TokenType Lexer::identifierType() {
     return it->second; // TokenType
   }
 
-  return TOKEN_IDENTIFIER;
+  return TokenType::TOKEN_IDENTIFIER;
 }
 
 Token Lexer::identifier() {
@@ -108,23 +112,25 @@ Token Lexer::number() {
       advance();
   }
 
-  return makeToken(TOKEN_NUMBER);
+  return makeToken(TokenType::TOKEN_NUMBER);
 }
 
 Token Lexer::string() {
   while (peek() != '"' && !isAtEnd()) {
-    if (peek() == '\n')
+    if (peek() == '\n') {
       line++;
+    }
 
     advance();
   }
 
-  if (isAtEnd())
+  if (isAtEnd()) {
     return errorToken("String não terminada.");
+  }
 
   advance(); // "
 
-  return makeToken(TOKEN_STRING);
+  return makeToken(TokenType::TOKEN_STRING);
 }
 
 void Lexer::skipWhitespace() {
@@ -158,48 +164,54 @@ Token Lexer::scanToken() {
   skipWhitespace();
   start = current;
 
-  if (isAtEnd())
-    return makeToken(TOKEN_EOF);
+  if (isAtEnd()) {
+    return makeToken(TokenType::TOKEN_EOF);
+  }
 
   char c = advance();
 
-  if (isAlpha(c))
+  if (isAlpha(c)) {
     return identifier();
+  }
 
   if (isDigit(c))
     return number();
 
   switch (c) {
   case '(':
-    return makeToken(TOKEN_LEFT_PAREN);
+    return makeToken(TokenType::TOKEN_LEFT_PAREN);
   case ')':
-    return makeToken(TOKEN_RIGHT_PAREN);
+    return makeToken(TokenType::TOKEN_RIGHT_PAREN);
   case '{':
-    return makeToken(TOKEN_LEFT_BRACE);
+    return makeToken(TokenType::TOKEN_LEFT_BRACE);
   case '}':
-    return makeToken(TOKEN_RIGHT_BRACE);
+    return makeToken(TokenType::TOKEN_RIGHT_BRACE);
   case ';':
-    return makeToken(TOKEN_SEMICOLON);
+    return makeToken(TokenType::TOKEN_SEMICOLON);
   case ',':
-    return makeToken(TOKEN_COMMA);
+    return makeToken(TokenType::TOKEN_COMMA);
   case '.':
-    return makeToken(TOKEN_DOT);
+    return makeToken(TokenType::TOKEN_DOT);
   case '-':
-    return makeToken(TOKEN_MINUS);
+    return makeToken(TokenType::TOKEN_MINUS);
   case '+':
-    return makeToken(TOKEN_PLUS);
+    return makeToken(TokenType::TOKEN_PLUS);
   case '/':
-    return makeToken(TOKEN_SLASH);
+    return makeToken(TokenType::TOKEN_SLASH);
   case '*':
-    return makeToken(TOKEN_STAR);
+    return makeToken(TokenType::TOKEN_STAR);
   case '!':
-    return makeToken(match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
+    return makeToken(match('=') ? TokenType::TOKEN_BANG_EQUAL
+                                : TokenType::TOKEN_BANG);
   case '=':
-    return makeToken(match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
+    return makeToken(match('=') ? TokenType::TOKEN_EQUAL_EQUAL
+                                : TokenType::TOKEN_EQUAL);
   case '<':
-    return makeToken(match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
+    return makeToken(match('=') ? TokenType::TOKEN_LESS_EQUAL
+                                : TokenType::TOKEN_LESS);
   case '>':
-    return makeToken(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+    return makeToken(match('=') ? TokenType::TOKEN_GREATER_EQUAL
+                                : TokenType::TOKEN_GREATER);
   case '"':
     return string();
   }
@@ -211,96 +223,9 @@ std::vector<Token> Lexer::scanTokens() {
   for (;;) {
     Token token = scanToken();
     tokens.push_back(token);
-    if (token.type == TOKEN_EOF)
+    if (token.type == TokenType::TOKEN_EOF) {
       break;
+    }
   }
-
   return tokens;
-}
-
-const char *tokenTypeToString(TokenType type) {
-  switch (type) {
-  case TOKEN_LEFT_PAREN:
-    return "TOKEN_LEFT_PAREN";
-  case TOKEN_RIGHT_PAREN:
-    return "TOKEN_RIGHT_PAREN";
-  case TOKEN_LEFT_BRACE:
-    return "TOKEN_LEFT_BRACE";
-  case TOKEN_RIGHT_BRACE:
-    return "TOKEN_RIGHT_BRACE";
-  case TOKEN_COMMA:
-    return "TOKEN_COMMA";
-  case TOKEN_DOT:
-    return "TOKEN_DOT";
-  case TOKEN_MINUS:
-    return "TOKEN_MINUS";
-  case TOKEN_PLUS:
-    return "TOKEN_PLUS";
-  case TOKEN_SEMICOLON:
-    return "TOKEN_SEMICOLON";
-  case TOKEN_SLASH:
-    return "TOKEN_SLASH";
-  case TOKEN_STAR:
-    return "TOKEN_STAR";
-  case TOKEN_BANG:
-    return "TOKEN_BANG";
-  case TOKEN_BANG_EQUAL:
-    return "TOKEN_BANG_EQUAL";
-  case TOKEN_EQUAL:
-    return "TOKEN_EQUAL";
-  case TOKEN_EQUAL_EQUAL:
-    return "TOKEN_EQUAL_EQUAL";
-  case TOKEN_GREATER:
-    return "TOKEN_GREATER";
-  case TOKEN_GREATER_EQUAL:
-    return "TOKEN_GREATER_EQUAL";
-  case TOKEN_LESS:
-    return "TOKEN_LESS";
-  case TOKEN_LESS_EQUAL:
-    return "TOKEN_LESS_EQUAL";
-  case TOKEN_IDENTIFIER:
-    return "TOKEN_IDENTIFIER";
-  case TOKEN_STRING:
-    return "TOKEN_STRING";
-  case TOKEN_NUMBER:
-    return "TOKEN_NUMBER";
-  case TOKEN_AND:
-    return "TOKEN_AND";
-  case TOKEN_CLASS:
-    return "TOKEN_CLASS";
-  case TOKEN_ELSE:
-    return "TOKEN_ELSE";
-  case TOKEN_FALSE:
-    return "TOKEN_FALSE";
-  case TOKEN_FOR:
-    return "TOKEN_FOR";
-  case TOKEN_FUN:
-    return "TOKEN_FUN";
-  case TOKEN_IF:
-    return "TOKEN_IF";
-  case TOKEN_NIL:
-    return "TOKEN_NIL";
-  case TOKEN_OR:
-    return "TOKEN_OR";
-  case TOKEN_PRINT:
-    return "TOKEN_PRINT";
-  case TOKEN_RETURN:
-    return "TOKEN_RETURN";
-  case TOKEN_SUPER:
-    return "TOKEN_SUPER";
-  case TOKEN_THIS:
-    return "TOKEN_THIS";
-  case TOKEN_TRUE:
-    return "TOKEN_TRUE";
-  case TOKEN_VAR:
-    return "TOKEN_VAR";
-  case TOKEN_WHILE:
-    return "TOKEN_WHILE";
-  case TOKEN_ERROR:
-    return "TOKEN_ERROR";
-  case TOKEN_EOF:
-    return "TOKEN_EOF";
-  default:
-    return "UNKNOWN";
-  }
 }
