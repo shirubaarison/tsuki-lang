@@ -3,13 +3,14 @@
 
 #include "Lexer.h"
 #include "expressions/Expr.h"
+#include "stmt/Stmt.h"
 #include <memory>
 #include <vector>
 
 class Parser {
 public:
   Parser(std::vector<Token> tokens);
-  std::vector<std::unique_ptr<Expr>> parse();
+  std::vector<std::unique_ptr<Stmt>> parse();
 
   enum class Precedence {
     PREC_NONE,
@@ -27,7 +28,7 @@ public:
 
 private:
   std::vector<Token> tokens;
-  std::vector<std::unique_ptr<Expr>> exprs;
+  std::vector<std::unique_ptr<Stmt>> stmts;
 
   Token current;
   Token previous;
@@ -46,23 +47,32 @@ private:
 
   void advance();
   void consume(TokenType type, const char *message);
-  void error(const std::string message);
+  void error(Token token, const std::string message);
+
+  std::unique_ptr<Stmt> declaration();
+  std::unique_ptr<Stmt> varDeclaration();
+
+  std::unique_ptr<Stmt> statement();
+  std::unique_ptr<Stmt> block();
+  std::unique_ptr<Stmt> expressionStatement();
+  std::unique_ptr<Stmt> printStatement();
+  std::unique_ptr<Stmt> ifStatement();
 
   std::unique_ptr<Expr> parsePrecedence(Precedence precedence);
-  std::unique_ptr<Expr> declaration();
-  std::unique_ptr<Expr> varDeclaration();
-  std::unique_ptr<Expr> statement();
-  std::unique_ptr<Expr> expressionStatement();
   std::unique_ptr<Expr> expression();
   std::unique_ptr<Expr> parseNud(const Token &token);
+
+  void synchronize();
 };
 
 class ParserError : public std::exception {
 public:
-  ParserError(const char *m) : msg(m) {}
+  ParserError(Token token, const char *m) : mToken(token), msg(m) {}
   const char *what() const noexcept override { return msg; }
+  const Token getToken() const { return mToken; }
 
 private:
+  Token mToken;
   const char *msg;
 };
 

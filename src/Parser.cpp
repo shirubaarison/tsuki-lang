@@ -6,11 +6,19 @@
 
 #include "Lexer.h"
 #include "TokenType.h"
+
+#include "stmt/VarStmt.h"
+#include "stmt/ExprStmt.h"
+#include "stmt/PrintStmt.h"
+#include "stmt/IfStmt.h"
+#include "stmt/BlockStmt.h"
+
 #include "expressions/BinaryExpr.h"
 #include "expressions/BooleanExpr.h"
 #include "expressions/Expr.h"
 #include "expressions/GroupingExpr.h"
 #include "expressions/LiteralExpr.h"
+#include "expressions/NameExpr.h"
 #include "expressions/PrefixExpr.h"
 #include "expressions/VarExpr.h"
 
@@ -33,32 +41,40 @@ inline static Parser::Precedence getPrecedence(Token op) {
 Parser::Parser(std::vector<Token> tokens)
     : tokens(tokens), hadError(false), panicMode(false), currentIndex(0) {}
 
-std::vector<std::unique_ptr<Expr>> Parser::parse() {
+std::vector<std::unique_ptr<Stmt>> Parser::parse() {
   if (!this->tokens.empty()) {
     current = this->tokens[0];
   }
 
+  while (!isAtEnd()) {
+    std::unique_ptr<Stmt> stmt = declaration();
+    stmts.push_back(std::move(stmt));
+  }
+
+  return std::move(stmts);
+}
+
+std::unique_ptr<Stmt> Parser::declaration() {
   try {
-    while (!isAtEnd()) {
-      std::unique_ptr<Expr> expr = declaration();
-      exprs.push_back(std::move(expr));
+    if (match(TokenType::TOKEN_VAR)) {
+      return varDeclaration();
+    } else {
+      return statement();
     }
-  } catch (const ParserError &parseError) {
-    error(parseError.what());
-  }
-  return std::move(exprs);
-}
 
-std::unique_ptr<Expr> Parser::declaration() {
-  if (match(TokenType::TOKEN_VAR)) {
-    return varDeclaration();
-  } else {
-    return statement();
+  } catch (const ParserError &parserError) {
+    error(parserError.getToken(), parserError.what());
+
+    if (panicMode) {
+      synchronize();
+    }
+
+    return nullptr;
   }
 }
 
-std::unique_ptr<Expr> Parser::varDeclaration() {
-  consume(TokenType::TOKEN_IDENTIFIER, "Expect variable name");
+std::unique_ptr<Stmt> Parser::varDeclaration() {
+  consume(TokenType::TOKEN_IDENTIFIER, "Expect variable name.");
   std::string varName = current.lexeme;
 
   std::unique_ptr<Expr> rhs = nullptr;
@@ -68,16 +84,64 @@ std::unique_ptr<Expr> Parser::varDeclaration() {
 
   consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 
-  return std::make_unique<VarExpr>(varName, std::move(rhs));
+  std::unique_ptr<VarExpr> varExpr = std::make_unique<VarExpr>(varName, std::move(rhs));
+  
+  return std::make_unique<VarStmt>(std::move(varExpr));
 }
 
-std::unique_ptr<Expr> Parser::statement() { return expressionStatement(); }
+std::unique_ptr<Stmt> Parser::statement() {
+  if (match(TokenType::TOKEN_PRINT)) {
+    return printStatement();
+  } else if (match(TokenType::TOKEN_IF)) {
+    return ifStatement();
+  } else if (match(TokenType::TOKEN_LEFT_BRACE)){
+    return block();
+  } else {
+    return expressionStatement(); 
+  }
+}
 
-std::unique_ptr<Expr> Parser::expressionStatement() {
+std::unique_ptr<Stmt> Parser::printStatement() { 
   std::unique_ptr<Expr> expr = expression();
-  consume(TokenType::TOKEN_SEMICOLON, "Expected ';' after expression");
 
-  return expr;
+  consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after expression");
+
+  return std::make_unique<PrintStmt>(std::move(expr));
+}
+
+std::unique_ptr<Stmt> Parser::ifStatement() {
+  consume(TokenType::TOKEN_LEFT_PAREN, "Expect '(' after 'if'");
+
+  std::unique_ptr<Expr> condition = expression();
+
+  consume(TokenType::TOKEN_RIGHT_PAREN, "Expect ')' after 'if'");
+  
+  std::unique_ptr<Stmt> thenBranch = statement();
+
+  std::unique_ptr<Stmt> elseBranch = nullptr;
+
+  if (check(TokenType::TOKEN_ELSE)) {
+    match(TokenType::TOKEN_ELSE);
+    elseBranch = statement();
+  }
+
+  return std::make_unique<IfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
+}
+
+std::unique_ptr<Stmt> Parser::block() {
+  std::unique_ptr<Stmt> block = statement();
+
+  consume(TokenType::TOKEN_RIGHT_BRACE, "Expect '}' after block declaration.");
+
+  return std::make_unique<BlockStmt>(std::move(block));
+}
+
+std::unique_ptr<Stmt> Parser::expressionStatement() {
+  std::unique_ptr<Expr> expr = expression();
+
+  consume(TokenType::TOKEN_SEMICOLON, "Expected ';' after expression.");
+
+  return std::make_unique<ExprStmt>(std::move(expr));
 }
 
 std::unique_ptr<Expr> Parser::expression() {
@@ -138,16 +202,16 @@ std::unique_ptr<Expr> Parser::parseNud(const Token &token) {
   }
 
   case TokenType::TOKEN_IDENTIFIER:
-    return std::make_unique<VarExpr>(token.lexeme, nullptr);
+    return std::make_unique<NameExpr>(token.lexeme);
 
   default:
-    throw ParserError("Unexpected right expression");
+    throw ParserError(token, "Unexpected expression.");
   }
 }
 
 Token Parser::scanToken() {
   if (currentIndex >= tokens.size()) {
-    throw ParserError("Expect right expression");
+    throw ParserError(current, "Expect right expression.");
     return tokens.back();
   }
 
@@ -169,9 +233,22 @@ Token Parser::peek() const {
   return tokens[currentIndex];
 }
 
-void Parser::error(std::string message) {
-  std::cerr << "ParserError: " << message << ": '" << current.lexeme << "'"
-            << std::endl;
+void Parser::error(Token token, std::string message) {
+  if (panicMode) {
+    return;
+  }
+
+  panicMode = true;
+
+  std::string errorMsg = "[line " + std::to_string(current.line) + "] ";
+  if (token.type == TokenType::TOKEN_EOF) {
+    std::cerr << errorMsg << "ParserError at end." << std::endl;
+  } else if (token.type == TokenType::TOKEN_ERROR) {
+    // nothing
+  } else {
+    std::cerr << errorMsg << "ParserError at '" + token.lexeme + "': " + message
+              << std::endl;
+  }
   hadError = true;
 }
 
@@ -180,7 +257,8 @@ void Parser::consume(TokenType type, const char *message) {
     advance();
     return;
   }
-  throw ParserError(message);
+
+  throw ParserError(peek(), message);
 }
 
 bool Parser::match(TokenType type) {
@@ -200,4 +278,29 @@ bool Parser::check(TokenType type) {
   }
 
   return peek().type == type;
+}
+
+void Parser::synchronize() {
+  panicMode = false;
+
+  while (!isAtEnd()) {
+    if (current.type == TokenType::TOKEN_SEMICOLON)
+      return;
+
+    switch (current.type) {
+    case TokenType::TOKEN_CLASS:
+    case TokenType::TOKEN_FUN:
+    case TokenType::TOKEN_VAR:
+    case TokenType::TOKEN_FOR:
+    case TokenType::TOKEN_IF:
+    case TokenType::TOKEN_WHILE:
+    case TokenType::TOKEN_PRINT:
+    case TokenType::TOKEN_RETURN:
+      return;
+
+    default:;
+    }
+
+    advance();
+  }
 }
