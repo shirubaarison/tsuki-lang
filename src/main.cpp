@@ -1,13 +1,13 @@
-
-#include "Lexer.h"
-#include "Parser.h"
-#include "TokenType.h"
 #include <cstring>
 #include <iostream>
 
 #include <memory>
 #include <readline/history.h>
 #include <readline/readline.h>
+
+#include "Lexer.h"
+#include "Parser.h"
+#include "TokenType.h"
 
 #define DEBUG_TOKENS
 #define DEBUG_PARSER
@@ -24,7 +24,7 @@ static void run(char *line) {
   std::cout << "\n======= Lexer =========\n";
   for (Token t : tokens) {
     if (t.type != TokenType::TOKEN_EOF) {
-      std::cout << "    " << t.lexeme << "\t" << tokenTypeToString(t.type)
+      std::cout << t.lexeme << "\t" << tokenTypeToString(t.type)
                 << std::endl;
     }
   }
@@ -33,13 +33,13 @@ static void run(char *line) {
 
   Parser parser(tokens);
 
-  std::vector<std::unique_ptr<Expr>> expressions = parser.parse();
+  std::vector<std::unique_ptr<Stmt>> stmts = parser.parse();
 
 #ifdef DEBUG_PARSER
   std::cout << "======= Parser ========\n";
-  for (const auto &expr : expressions)
-    if (expr) {
-      expr->print(std::cout);
+  for (const auto &stmt : stmts)
+    if (stmt) {
+      stmt->print(std::cout);
       std::cout << std::endl;
     }
   std::cout << "=======================" << std::endl;
@@ -73,6 +73,7 @@ static void repl() {
 }
 
 int main(int argc, const char *argv[]) {
+
   if (argc == 1) {
     repl();
   } else {
