@@ -1,0 +1,36 @@
+program         -> declaration* EOF ;
+
+declaration     -> funDeclaration
+                  | varDeclaration
+                  | statement;
+
+funDeclaration  -> "fn" function ;
+varDeclaration  -> "var" IDENTIFIER ( "="  expression )? ";" ;
+
+statement       -> exprStmt
+                  | forStmt
+                  | ifStmt
+                  | printStmt
+                  | block ;
+
+exprStmt       -> expression ";" ;
+forStmt        -> "for" "(" ( varDeclaration | exprStmt ";" )
+                      expression? ";"
+                      expression? ")" statement ";" ;
+
+ifStmt         -> "if" "(" expression ")" statement ( "else" statement )? ;
+printStmt      -> "print" expression ";" ;
+block          -> "{" declaration "}" ;
+
+expression     -> assignment ;
+assignment     -> IDENTIFIER "=" assignment | term ;
+term           -> factor ( ("-" | "+" ) factor)* ;
+factor         -> unary ( ( "/" | "*" ) unary)* ;
+unary          -> ( "!" | "-" ) unary | primary ;
+primary        -> "true" | "false" | "nil" | "this" | NUMBER | STRING | IDENTIFIER | "(" expression ")" ;
+
+NUMBER         -> DIGIT+ ( "." DIGIT+ )? ;
+STRING         -> "\"" caracteres do alfabeto* "\"" ;
+IDENTIFIER     -> ALPHA ( ALPHA | DIGIT )* ;
+ALPHA          -> "a" ... "z" | "A" ... "Z" | "_" ;
+DIGIT          -> "0" ... "9" ;
