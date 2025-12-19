@@ -17,6 +17,10 @@ public:
     builder << ")";
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitAssignExpr(this);
+  }
+
 private:
   const std::string mName;
   const std::unique_ptr<Expr> mRight;

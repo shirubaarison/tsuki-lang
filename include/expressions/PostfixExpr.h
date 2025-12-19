@@ -18,6 +18,10 @@ public:
     builder << tokenTypeToString(mOperator) << ")";
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitPostfixExpr(this);
+  }
+
 private:
   const std::unique_ptr<Expr> mleft;
   const TokenType mOperator;

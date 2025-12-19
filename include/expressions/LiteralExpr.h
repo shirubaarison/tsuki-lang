@@ -1,18 +1,26 @@
 #ifndef LITERAL_EXPR_H
 #define LITERAL_EXPR_H
 
+#include "Value.h"
 #include "expressions/Expr.h"
 #include <ostream>
+#include <variant>
 
 class LiteralExpr : public Expr {
 public:
-  LiteralExpr(std::string value) : mValue(value) {}
+  LiteralExpr(Value value) : mValue(value) {}
   virtual void print(std::ostream &builder) const override {
-    builder << mValue;
+    std::visit(ValuePrinter{}, mValue);
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitLiteralExpr(this);
+  }
+
+  const Value value() const { return mValue; }
+
 private:
-  const std::string mValue;
+  const Value mValue;
 };
 
 #endif // !LITERAL_EXPR_H

@@ -11,6 +11,10 @@ public:
     builder << val;
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitBooleanExpr(this);
+  }
+
 private:
   bool mValue;
 };

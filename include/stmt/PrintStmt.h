@@ -16,6 +16,14 @@ public:
     }
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitPrintStmt(this);
+  }
+
+  const Expr& expression() const {
+    return *mExpr;
+  }
+
 private:
   const std::unique_ptr<Expr> mExpr;
 };

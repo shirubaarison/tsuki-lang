@@ -10,6 +10,10 @@ public:
 
   virtual void print(std::ostream &builder) const override { builder << mName; }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitNameExpr(this);
+  }
+
 private:
   const std::string mName;
 };

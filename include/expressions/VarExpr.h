@@ -18,6 +18,10 @@ public:
     }
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitVarExpr(this);
+  }
+
 private:
   const std::string mName;
   const std::unique_ptr<Expr> mValue;

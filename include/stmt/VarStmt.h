@@ -15,6 +15,10 @@ public:
     }
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitVarStmt(this);
+  }
+
 private:
   const std::unique_ptr<VarExpr> mVarExpr;
 };

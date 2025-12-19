@@ -13,6 +13,9 @@ public:
     }
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitBlockStmt(this);
+  }
 
 private:
   const std::unique_ptr<Stmt> mStatement;

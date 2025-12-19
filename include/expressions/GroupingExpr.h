@@ -14,6 +14,11 @@ public:
     builder << ")";
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitGroupingExpr(this);
+  }
+
+
 private:
   const std::unique_ptr<Expr> mExpr;
 };

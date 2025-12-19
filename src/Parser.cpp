@@ -85,7 +85,7 @@ std::unique_ptr<Stmt> Parser::varDeclaration() {
   consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 
   std::unique_ptr<VarExpr> varExpr = std::make_unique<VarExpr>(varName, std::move(rhs));
-  
+
   return std::make_unique<VarStmt>(std::move(varExpr));
 }
 
@@ -181,8 +181,11 @@ std::unique_ptr<Expr> Parser::parseNud(const Token &token) {
   case TokenType::TOKEN_TRUE:
     return std::make_unique<BooleanExpr>(true);
   case TokenType::TOKEN_NIL:
-    return std::make_unique<LiteralExpr>(nullptr);
-  case TokenType::TOKEN_NUMBER:
+    return std::make_unique<LiteralExpr>(std::monostate{});  
+  case TokenType::TOKEN_NUMBER: {
+    double value = std::stod(token.lexeme);
+    return std::make_unique<LiteralExpr>(value);
+    }
   case TokenType::TOKEN_STRING:
     return std::make_unique<LiteralExpr>(token.lexeme);
 

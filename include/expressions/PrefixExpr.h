@@ -18,6 +18,10 @@ public:
     builder << ")";
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitPrefixExpr(this);
+  }
+
 private:
   const TokenType mOperator;
   const std::unique_ptr<Expr> mRight;

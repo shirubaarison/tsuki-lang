@@ -24,6 +24,14 @@ public:
     builder << ")";
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitBinaryExpr(this);
+  }
+
+  const Expr& left() const { return *mLeft; }
+  const Expr& right() const { return *mRight; }
+  TokenType operatorType() const { return mOperator; }
+
 private:
   const std::unique_ptr<Expr> mLeft;
   const TokenType mOperator;

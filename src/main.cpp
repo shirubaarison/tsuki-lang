@@ -4,46 +4,61 @@
 #include <memory>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <vector>
 
 #include "Lexer.h"
 #include "Parser.h"
 #include "TokenType.h"
+#include "VM/Debug.h"
+#include "VM/VM.h"
+#include "Compiler.h"
 
 #define DEBUG_TOKENS
 #define DEBUG_PARSER
+#define DEBUG_COMPILER
 
 static void run(char *line) {
   std::string str(line);
-  std::cout << str << std::endl;
 
   Lexer lexer(str);
 
   std::vector<Token> tokens = lexer.scanTokens();
 
 #ifdef DEBUG_TOKENS
-  std::cout << "\n======= Lexer =========\n";
   for (Token t : tokens) {
     if (t.type != TokenType::TOKEN_EOF) {
       std::cout << t.lexeme << "\t" << tokenTypeToString(t.type)
                 << std::endl;
     }
   }
-  std::cout << "=======================\n" << std::endl;
 #endif
 
   Parser parser(tokens);
 
-  std::vector<std::unique_ptr<Stmt>> stmts = parser.parse();
+  std::vector<std::unique_ptr<Stmt>> syntaxTree = parser.parse();
 
 #ifdef DEBUG_PARSER
-  std::cout << "======= Parser ========\n";
-  for (const auto &stmt : stmts)
+  for (const auto &stmt : syntaxTree)
     if (stmt) {
       stmt->print(std::cout);
       std::cout << std::endl;
     }
-  std::cout << "=======================" << std::endl;
 #endif
+
+  std::vector<Instruction> bytecode;
+  Compiler compiler(bytecode, std::move(syntaxTree));
+  compiler.compile();
+
+#ifdef DEBUG_COMPILER
+  disassembleChunk(bytecode, "_main");
+#endif
+
+  VM::Machine vm(bytecode
+#ifdef DEBUG_COMPILER
+  , true
+#endif
+  );
+  vm.run();
 }
 
 static void repl() {

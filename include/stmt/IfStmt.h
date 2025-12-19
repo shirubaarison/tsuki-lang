@@ -24,7 +24,7 @@ public:
     }
 
     builder << " }";
-  
+
     if (mElseBranch) {
       builder << " else {";
       mElseBranch->print(builder);
@@ -32,6 +32,9 @@ public:
     }
   }
 
+  virtual void accept(Visitor& visitor) const override {
+    visitor.visitIfStmt(this);
+  }
 
 private:
   const std::unique_ptr<Expr> mCondition;
