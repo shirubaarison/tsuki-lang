@@ -6,12 +6,14 @@
 #include <readline/readline.h>
 #include <vector>
 
+#include "Compiler.h"
 #include "Lexer.h"
 #include "Parser.h"
 #include "TokenType.h"
 #include "VM/Debug.h"
 #include "VM/VM.h"
-#include "Compiler.h"
+
+#define VERSION "0.0.1"
 
 #define DEBUG_TOKENS
 #define DEBUG_PARSER
@@ -27,8 +29,7 @@ static void run(char *line) {
 #ifdef DEBUG_TOKENS
   for (Token t : tokens) {
     if (t.type != TokenType::TOKEN_EOF) {
-      std::cout << t.lexeme << "\t" << tokenTypeToString(t.type)
-                << std::endl;
+      std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
     }
   }
 #endif
@@ -55,19 +56,29 @@ static void run(char *line) {
 
   VM::Machine vm(bytecode
 #ifdef DEBUG_COMPILER
-  , true
+                 ,
+                 true
 #endif
   );
   vm.run();
 }
 
+static void help() {
+  std::cout << "Tsuki is a dynamically-typed interpreted language that "
+               "compiles source code to bytecode instructions executed by a "
+               "stack-based virtual machine" << std::endl;
+  std::cout << "Available commands:\n" << "  - help\n  - quit" << std::endl;
+}
+
 static void repl() {
+  std::cout << "Tsuki version " << VERSION << "\nType \"help\" for more information.\n";
+
   char *line;
 
   using_history();
 
   for (;;) {
-    line = readline("> ");
+    line = readline(">> ");
 
     if (!line) {
       break;
@@ -81,6 +92,9 @@ static void repl() {
     } else if (strcmp(line, "clear") == 0) {
       std::cout << "\033[2J";
       continue;
+    } else if (strcmp(line, "help") == 0) {
+      help();
+      continue;
     }
 
     run(line);
@@ -88,7 +102,6 @@ static void repl() {
 }
 
 int main(int argc, const char *argv[]) {
-
   if (argc == 1) {
     repl();
   } else {
