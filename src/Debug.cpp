@@ -14,8 +14,7 @@ void disassembleChunk(const std::vector<Instruction>& code, const char* name) {
 }
 
 void disassembleInstruction(const Instruction& instr, size_t offset) {
-  std::cout << std::setw(4) << std::setfill('0') << offset << " ";
-
+  std::cout << std::right << std::setw(4) << std::setfill('0') << offset << " ";
   switch (instr.op) {
     case OpCode::OP_CONSTANT:
       std::cout << std::setw(16) << std::setfill(' ') << std::left
