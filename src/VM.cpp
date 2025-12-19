@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -38,9 +39,26 @@ void VM::Machine::run() {
         return;
 
       case OpCode::OP_ADD: {
-        double b = std::get<double>(stack.back()); stack.pop_back();
-        double a = std::get<double>(stack.back()); stack.pop_back();
-        stack.push_back(a + b);
+        if (std::holds_alternative<std::string>(stack.back())) {
+          std::string b = std::get<std::string>(stack.back());
+          stack.pop_back();
+          if (std::holds_alternative<std::string>(stack.back())) {
+            std::string a = std::get<std::string>(stack.back());
+            stack.pop_back();
+
+            stack.push_back(a + b);
+          }
+        } else {
+          double b = std::get<double>(stack.back()); stack.pop_back();
+          if (std::holds_alternative<std::string>(stack.back())) {
+            std::string a = std::get<std::string>(stack.back());
+            stack.pop_back();
+            stack.push_back(a + std::to_string(b));
+          } else {
+            double a = std::get<double>(stack.back()); stack.pop_back();
+            stack.push_back(a + b);
+          }
+        }
         break;
       }
       case OpCode::OP_SUB: {

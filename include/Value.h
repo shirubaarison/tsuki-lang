@@ -12,7 +12,7 @@ struct ValuePrinter {
 
   void operator()(int i) const { std::cout << i; }
   void operator()(double d) const { std::cout << d; }
-  void operator()(const std::string &s) const { std::cout << s; }
+  void operator()(const std::string &s) const { std::cout << "'" << s << "'"; }
 };
 
 #endif // !VALUE_H

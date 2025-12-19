@@ -32,6 +32,7 @@ static void run(char *line) {
       std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
     }
   }
+  std::cout << std::endl;
 #endif
 
   Parser parser(tokens);
@@ -44,6 +45,7 @@ static void run(char *line) {
       stmt->print(std::cout);
       std::cout << std::endl;
     }
+  std::cout << std::endl;
 #endif
 
   std::vector<Instruction> bytecode;

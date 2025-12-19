@@ -130,7 +130,11 @@ Token Lexer::string() {
 
   advance(); // "
 
-  return makeToken(TokenType::TOKEN_STRING);
+  Token token;
+  token.type = TokenType::TOKEN_STRING;
+  token.lexeme = std::string(start + 1, current - 1);
+  token.line = line;
+  return token;
 }
 
 void Lexer::skipWhitespace() {
