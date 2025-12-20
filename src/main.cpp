@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
@@ -15,9 +16,7 @@
 
 #define VERSION "0.0.1"
 
-#define DEBUG_TOKENS
-#define DEBUG_PARSER
-#define DEBUG_COMPILER
+bool isInDebugMode = false;
 
 static void run(char *line) {
   std::string str(line);
@@ -26,50 +25,51 @@ static void run(char *line) {
 
   std::vector<Token> tokens = lexer.scanTokens();
 
-#ifdef DEBUG_TOKENS
-  for (Token t : tokens) {
-    if (t.type != TokenType::TOKEN_EOF) {
-      std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
+  if (isInDebugMode) {
+    for (Token t : tokens) {
+      if (t.type != TokenType::TOKEN_EOF) {
+        std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
+      }
     }
+    std::cout << std::endl;
   }
-  std::cout << std::endl;
-#endif
 
   Parser parser(tokens);
 
   std::vector<std::unique_ptr<Stmt>> syntaxTree = parser.parse();
 
-#ifdef DEBUG_PARSER
-  for (const auto &stmt : syntaxTree)
+  if (isInDebugMode) {
+    for (const auto &stmt : syntaxTree)
     if (stmt) {
       stmt->print(std::cout);
       std::cout << std::endl;
     }
-  std::cout << std::endl;
-#endif
+    std::cout << std::endl;
+  }
 
   std::vector<Instruction> bytecode;
   Compiler compiler(bytecode, std::move(syntaxTree));
   compiler.compile();
 
-#ifdef DEBUG_COMPILER
+  if (isInDebugMode) {
   disassembleChunk(bytecode, "_main");
-#endif
+  }
 
-  VM::Machine vm(bytecode
-#ifdef DEBUG_COMPILER
-                 ,
-                 true
-#endif
-  );
+  VM::Machine vm(bytecode, isInDebugMode);
   vm.run();
 }
 
-static void help() {
+static void help(bool man = false) {
   std::cout << "Tsuki is a dynamically-typed interpreted language that "
                "compiles source code to bytecode instructions executed by a "
                "stack-based virtual machine" << std::endl;
-  std::cout << "Available commands:\n" << "  - help\n  - quit" << std::endl;
+  if (!man) {
+    std::cout << "Available commands:\n" << "  - help\n  - quit" << std::endl;
+  } else {
+    std::cout << "Available options:\n";
+    std::cout << "  -h, --help  \t give this help list" << std::endl;
+    std::cout << "  -d, --debug \t print debug information about lexer, parser, compilated code and vm backtrace" << std::endl;
+  }
 }
 
 static void repl() {
@@ -103,12 +103,24 @@ static void repl() {
   }
 }
 
-int main(int argc, const char *argv[]) {
-  if (argc == 1) {
+bool cmdOptionExists(char** begin, char** end, const std::string& option) {
+    return std::find(begin, end, option) != end;
+}
+
+int main(int argc, char *argv[]) {
+  if (cmdOptionExists(argv, argv + argc, "--debug") || cmdOptionExists(argv, argv + argc, "-d")) {
+    isInDebugMode = true;
     repl();
+  } else if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h")) {
+    help(true);
   } else {
-    std::cerr << "Usage: " << argv[0] << " [path]" << std::endl;
-    exit(64);
+    if (argc == 1) {
+      repl();
+    } else {
+      std::cout << "Usage: " << argv[0] << " [-options] [file_path]" << std::endl;
+      help(true);
+      exit(64);
+    }
   }
 
   return 0;

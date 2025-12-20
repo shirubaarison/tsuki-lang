@@ -18,12 +18,15 @@ void VM::Machine::run() {
 
     if (debugMode) {
       std::cout << "     ";
+      if (stack.empty()) {
+        std::cout << "[ ]";
+      }
       for (const auto& val : stack) {
         std::cout << "[ ";
         std::visit(ValuePrinter{}, val);
         std::cout << " ]";
       }
-      std::cout << "\n";
+      std::cout << std::endl;
 
       disassembleInstruction(code[ip], ip);
     }

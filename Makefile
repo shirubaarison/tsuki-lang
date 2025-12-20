@@ -1,4 +1,4 @@
-TARGET = language
+TARGET = tsuki
 CC = g++
 CFLAGS = -Wall -Iinclude -g
 LDFLAGS = -lreadline
