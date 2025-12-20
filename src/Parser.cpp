@@ -86,7 +86,7 @@ std::unique_ptr<Stmt> Parser::varDeclaration() {
 
   std::unique_ptr<VarExpr> varExpr = std::make_unique<VarExpr>(varName, std::move(rhs));
 
-  return std::make_unique<VarStmt>(std::move(varExpr));
+  return std::make_unique<VarStmt>(varName, std::move(varExpr));
 }
 
 std::unique_ptr<Stmt> Parser::statement() {
@@ -101,7 +101,7 @@ std::unique_ptr<Stmt> Parser::statement() {
   }
 }
 
-std::unique_ptr<Stmt> Parser::printStatement() { 
+std::unique_ptr<Stmt> Parser::printStatement() {
   std::unique_ptr<Expr> expr = expression();
 
   consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after expression");
@@ -115,7 +115,7 @@ std::unique_ptr<Stmt> Parser::ifStatement() {
   std::unique_ptr<Expr> condition = expression();
 
   consume(TokenType::TOKEN_RIGHT_PAREN, "Expect ')' after 'if'");
-  
+
   std::unique_ptr<Stmt> thenBranch = statement();
 
   std::unique_ptr<Stmt> elseBranch = nullptr;
@@ -129,11 +129,15 @@ std::unique_ptr<Stmt> Parser::ifStatement() {
 }
 
 std::unique_ptr<Stmt> Parser::block() {
-  std::unique_ptr<Stmt> block = statement();
+  std::vector<std::unique_ptr<Stmt>> statements;
+
+  while (!check(TokenType::TOKEN_RIGHT_BRACE)) {
+    statements.push_back(statement());
+  }
 
   consume(TokenType::TOKEN_RIGHT_BRACE, "Expect '}' after block declaration.");
 
-  return std::make_unique<BlockStmt>(std::move(block));
+  return std::make_unique<BlockStmt>(std::move(statements));
 }
 
 std::unique_ptr<Stmt> Parser::expressionStatement() {

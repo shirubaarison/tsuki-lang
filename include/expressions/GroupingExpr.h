@@ -7,20 +7,15 @@
 
 class GroupingExpr : public Expr {
 public:
-  GroupingExpr(std::unique_ptr<Expr> expr) : mExpr(std::move(expr)) {}
-  virtual void print(std::ostream &builder) const override {
-    builder << "(";
-    mExpr->print(builder);
-    builder << ")";
-  }
+  GroupingExpr(std::unique_ptr<Expr> expr);
+  virtual void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitGroupingExpr(this);
-  }
+  virtual void accept(Visitor& visitor) const override;
 
+  const Expr* getExpr() const;
 
 private:
-  const std::unique_ptr<Expr> mExpr;
+  std::unique_ptr<Expr> mExpr;
 };
 
 #endif // !GROUPING_EXPR_H

@@ -1,7 +1,6 @@
 #ifndef PREFIX_EXPR_H
 #define PREFIX_EXPR_H
 
-#include "Lexer.h"
 #include "TokenType.h"
 #include "expressions/Expr.h"
 #include <memory>
@@ -9,22 +8,18 @@
 
 class PrefixExpr : public Expr {
 public:
-  PrefixExpr(TokenType operatorType, std::unique_ptr<Expr> right)
-      : mOperator(operatorType), mRight(std::move(right)) {};
+  PrefixExpr(TokenType op, std::unique_ptr<Expr> expr);
+  void print(std::ostream &builder) const override;
 
-  virtual void print(std::ostream &builder) const override {
-    builder << "(" << tokenToOperator(mOperator);
-    mRight->print(builder);
-    builder << ")";
-  }
+  void accept(Visitor &visitor) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitPrefixExpr(this);
-  }
+  const Expr *getExpr() const;
+
+  TokenType getOp() const;
 
 private:
-  const TokenType mOperator;
-  const std::unique_ptr<Expr> mRight;
+  const TokenType mOp;
+  std::unique_ptr<Expr> mExpr;
 };
 
 #endif // !PREFIX_EXPR_H

@@ -3,22 +3,20 @@
 
 #include "stmt/Stmt.h"
 #include <memory>
+#include <vector>
+
 class BlockStmt : public Stmt {
-public: 
-  BlockStmt(std::unique_ptr<Stmt> statement) : mStatement(std::move(statement)) {}
+public:
+  BlockStmt(std::vector<std::unique_ptr<Stmt>> statements);
 
-  virtual void print(std::ostream &builder) const override {
-    if (mStatement) {
-      mStatement->print(builder);
-    }
-  }
+  virtual void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitBlockStmt(this);
-  }
+  virtual void accept(Visitor &visitor) const override;
+
+  const std::vector<std::unique_ptr<Stmt>> &getStatements() const;
 
 private:
-  const std::unique_ptr<Stmt> mStatement;
+  std::vector<std::unique_ptr<Stmt>> mStatements;
 };
 
 #endif // !BLOCK_STMT_H

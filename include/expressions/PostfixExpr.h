@@ -1,7 +1,6 @@
 #ifndef POSTFIX_EXPR_H
 #define POSTFIX_EXPR_H
 
-#include "Lexer.h"
 #include "TokenType.h"
 #include "expressions/Expr.h"
 #include <memory>
@@ -9,22 +8,19 @@
 
 class PostfixExpr : public Expr {
 public:
-  PostfixExpr(std::unique_ptr<Expr> left, TokenType operatorType)
-      : mleft(std::move(left)), mOperator(operatorType) {};
+  PostfixExpr(std::unique_ptr<Expr> expr, TokenType op);
 
-  virtual void print(std::ostream &builder) const override {
-    builder << "(";
-    mleft->print(builder);
-    builder << tokenTypeToString(mOperator) << ")";
-  }
+  void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitPostfixExpr(this);
-  }
+  void accept(Visitor &visitor) const override;
+
+  const Expr *getExpr() const;
+
+  TokenType getOp() const;
 
 private:
-  const std::unique_ptr<Expr> mleft;
-  const TokenType mOperator;
+  std::unique_ptr<Expr> mExpr;
+  const TokenType mOp;
 };
 
 #endif // !POSTFIX_EXPR_H

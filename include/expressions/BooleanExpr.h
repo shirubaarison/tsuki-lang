@@ -5,18 +5,15 @@
 #include <ostream>
 class BooleanExpr : public Expr {
 public:
-  BooleanExpr(bool value) : mValue(value) {}
-  virtual void print(std::ostream &builder) const override {
-    std::string val = mValue ? "true" : "false";
-    builder << val;
-  }
+  BooleanExpr(bool value);
+  virtual void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitBooleanExpr(this);
-  }
+  virtual void accept(Visitor& visitor) const override;
+
+  bool getValue() const;
 
 private:
-  bool mValue;
+  const bool mValue;
 };
 
 #endif // !BOOLEAN_EXPR_H

@@ -7,25 +7,15 @@
 
 class PrintStmt : public Stmt {
 public:
-  PrintStmt(std::unique_ptr<Expr> expr) : mExpr(std::move(expr)) {}
+  PrintStmt(std::unique_ptr<Expr> expr);
+  virtual void print(std::ostream &builder) const override;
 
-  virtual void print(std::ostream &builder) const override {
-    builder << "PRINT ";
-    if (mExpr) {
-      mExpr->print(builder);
-    }
-  }
+  virtual void accept(Visitor &visitor) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitPrintStmt(this);
-  }
-
-  const Expr& expression() const {
-    return *mExpr;
-  }
+  const Expr* getExpr() const;
 
 private:
-  const std::unique_ptr<Expr> mExpr;
+  std::unique_ptr<Expr> mExpr;
 };
 
 #endif // !PRINT_STMT_H

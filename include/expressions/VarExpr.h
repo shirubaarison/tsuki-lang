@@ -7,24 +7,16 @@
 
 class VarExpr : public Expr {
 public:
-  VarExpr(const std::string name, std::unique_ptr<Expr> value)
-      : mName(name), mValue(std::move(value)) {}
-  virtual void print(std::ostream &builder) const override {
-    builder << "var:" << mName << " = ";
-    if (mValue) {
-      mValue->print(builder);
-    } else {
-      builder << "nil";
-    }
-  }
+  VarExpr(const std::string &name, std::unique_ptr<Expr> rhs);
+  void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitVarExpr(this);
-  }
+  void accept(Visitor &visitor) const override;
+
+  const std::string &getName() const;
 
 private:
   const std::string mName;
-  const std::unique_ptr<Expr> mValue;
+  std::unique_ptr<Expr> rhs;
 };
 
 #endif // !VAR_EXPR_H

@@ -1,20 +1,23 @@
 TARGET = tsuki
-CC = g++
-CFLAGS = -Wall -Iinclude -g
+CXX = g++
+CXXFLAGS = -Wall -Iinclude -g
 LDFLAGS = -lreadline
 SRCDIR = src
 OBJDIR = obj
 
-SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+SOURCES = $(wildcard $(SRCDIR)/*.cpp) \
+					$(wildcard $(SRCDIR)/expressions/*.cpp) \
+					$(wildcard $(SRCDIR)/stmt/*.cpp)
 OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
 
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(TARGET) ${LDFLAGS}
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)

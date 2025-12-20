@@ -1,26 +1,25 @@
 #ifndef VAR_STMT_H
 #define VAR_STMT_H
 
-#include <memory>
-
 #include "expressions/VarExpr.h"
 #include "stmt/Stmt.h"
+#include <memory>
 
 class VarStmt : public Stmt {
 public:
-  VarStmt(std::unique_ptr<VarExpr> varExpr) : mVarExpr(std::move(varExpr)) {}
-  virtual void print(std::ostream &builder) const override {
-    if (mVarExpr) {
-      mVarExpr->print(builder);
-    }
-  }
+  VarStmt(const std::string &name, std::unique_ptr<VarExpr> varExpr);
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitVarStmt(this);
-  }
+  virtual void print(std::ostream &builder) const override;
+
+  virtual void accept(Visitor &visitor) const override;
+
+  const std::string &getName() const;
+
+  const VarExpr *getExpr() const;
 
 private:
-  const std::unique_ptr<VarExpr> mVarExpr;
+  const std::string mName;
+  std::unique_ptr<VarExpr> mExpr;
 };
 
 #endif // !VAR_STMT_H

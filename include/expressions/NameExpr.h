@@ -6,13 +6,13 @@
 
 class NameExpr : public Expr {
 public:
-  NameExpr(const std::string &name) : mName(name) {};
+  NameExpr(const std::string &name);
 
-  virtual void print(std::ostream &builder) const override { builder << mName; }
+  virtual void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitNameExpr(this);
-  }
+  virtual void accept(Visitor &visitor) const override;
+
+  const std::string &getName() const;
 
 private:
   const std::string mName;

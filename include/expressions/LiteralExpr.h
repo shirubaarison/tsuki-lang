@@ -4,20 +4,15 @@
 #include "Value.h"
 #include "expressions/Expr.h"
 #include <ostream>
-#include <variant>
 
 class LiteralExpr : public Expr {
 public:
-  LiteralExpr(Value value) : mValue(value) {}
-  virtual void print(std::ostream &builder) const override {
-    std::visit(ValuePrinter{}, mValue);
-  }
+  LiteralExpr(Value value);
+  virtual void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitLiteralExpr(this);
-  }
+  virtual void accept(Visitor& visitor) const override;
 
-  const Value value() const { return mValue; }
+  const Value& getValue() const;
 
 private:
   const Value mValue;

@@ -9,37 +9,22 @@
 class IfStmt : public Stmt {
 public:
   IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch,
-         std::unique_ptr<Stmt> elseBranch)
-      : mCondition(std::move(condition)), mThenBranch(std::move(thenBranch)),
-        mElseBranch(std::move(elseBranch)) {}
-  virtual void print(std::ostream &builder) const override {
-    builder << "if (";
-    if (mCondition) {
-      mCondition->print(builder);
-    }
-    builder << ") then { ";
+         std::unique_ptr<Stmt> elseBranch);
 
-    if (mThenBranch) {
-      mThenBranch->print(builder);
-    }
+  virtual void print(std::ostream &builder) const override;
 
-    builder << " }";
+  virtual void accept(Visitor &visitor) const override;
 
-    if (mElseBranch) {
-      builder << " else {";
-      mElseBranch->print(builder);
-      builder << " }";
-    }
-  }
+  const Expr* getCondition() const;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitIfStmt(this);
-  }
+  const Stmt* getThen() const;
+
+  const Stmt* getElse() const;
 
 private:
-  const std::unique_ptr<Expr> mCondition;
-  const std::unique_ptr<Stmt> mThenBranch;
-  const std::unique_ptr<Stmt> mElseBranch;
+  std::unique_ptr<Expr> mCondition;
+  std::unique_ptr<Stmt> mThenBranch;
+  std::unique_ptr<Stmt> mElseBranch;
 };
 
 #endif // !IF_STMT_H

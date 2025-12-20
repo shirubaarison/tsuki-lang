@@ -8,22 +8,19 @@
 
 class AssignExpr : public Expr {
 public:
-  AssignExpr(const std::string &name, std::unique_ptr<Expr> right)
-      : mName(name), mRight(std::move(right)) {};
+  AssignExpr(const std::string &name, std::unique_ptr<Expr> expr);
 
-  virtual void print(std::ostream &builder) const override {
-    builder << "(" << mName << " = ";
-    mRight->print(builder);
-    builder << ")";
-  }
+  virtual void print(std::ostream &builder) const override;
 
-  virtual void accept(Visitor& visitor) const override {
-    visitor.visitAssignExpr(this);
-  }
+  virtual void accept(Visitor &visitor) const override;
+
+  const std::string &name() const;
+
+  const Expr *getExpression() const;
 
 private:
   const std::string mName;
-  const std::unique_ptr<Expr> mRight;
+  std::unique_ptr<Expr> mExpr;
 };
 
 #endif // !ASSIGN_EXPR_H
