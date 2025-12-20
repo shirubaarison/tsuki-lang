@@ -3,9 +3,10 @@
 #include <iostream>
 #include <variant>
 
+#include "VM/VM.h"
 #include "Value.h"
 
-void disassembleChunk(const std::vector<Instruction>& code, const char* name) {
+void disassembleChunk(const std::vector<Instruction> &code, const char *name) {
   std::cout << name << ":\n";
 
   for (size_t offset = 0; offset < code.size(); ++offset) {
@@ -13,7 +14,7 @@ void disassembleChunk(const std::vector<Instruction>& code, const char* name) {
   }
 }
 
-void disassembleInstruction(const Instruction& instr, size_t offset) {
+void disassembleInstruction(const Instruction &instr, size_t offset) {
   std::cout << std::right << std::setw(4) << std::setfill('0') << offset << " ";
   switch (instr.op) {
     case OpCode::OP_CONSTANT:
@@ -51,8 +52,52 @@ void disassembleInstruction(const Instruction& instr, size_t offset) {
       std::cout << "OP_POP\n";
       break;
 
-    default:
-      std::cout << "UNKNOWN_OPCODE\n";
+    case OpCode::OP_GREATER:
+      std::cout << "OP_GREATER\n";
+      break;
+
+    case OpCode::OP_GREATER_EQUAL:
+      std::cout << "OP_GREATER_EQUAL\n";
+      break;
+
+    case OpCode::OP_LESS:
+      std::cout << "OP_LESS\n";
+      break;
+
+    case OpCode::OP_LESS_EQUAL:
+      std::cout << "OP_LESS_EQUAL\n";
+      break;
+
+    case OpCode::OP_NOT:
+      std::cout << "OP_NOT\n";
+      break;
+
+    case OpCode::OP_EQUAL:
+      std::cout << "OP_EQUAL\n";
+      break;
+
+    case OpCode::OP_NOT_EQUAL:
+      std::cout << "OP_NOT_EQUAL\n";
+      break;
+
+    case OpCode::OP_TRUE:
+      std::cout << "OP_TRUE\n";
+      break;
+
+    case OpCode::OP_FALSE:
+      std::cout << "OP_FALSE\n";
+      break;
+
+    case OpCode::OP_NIL:
+      std::cout << "OP_NIL\n";
+      break;
+
+    case OpCode::OP_AND:
+      std::cout << "OP_AND\n";
+      break;
+
+    case OpCode::OP_OR:
+      std::cout << "OP_OR\n";
       break;
   }
 }

@@ -24,22 +24,45 @@
 
 inline static Parser::Precedence getPrecedence(Token op) {
   switch (op.type) {
-  case TokenType::TOKEN_PLUS:
-    return Parser::Precedence::PREC_TERM;
-  case TokenType::TOKEN_MINUS:
-    return Parser::Precedence::PREC_TERM;
-  case TokenType::TOKEN_STAR:
-    return Parser::Precedence::PREC_FACTOR;
-  case TokenType::TOKEN_SLASH:
-    return Parser::Precedence::PREC_FACTOR;
+    case TokenType::TOKEN_EQUAL_EQUAL:
+    case TokenType::TOKEN_BANG_EQUAL:
+      return Parser::Precedence::PREC_EQUALITY;
 
-  default:
-    return Parser::Precedence::PREC_NONE;
+    case TokenType::TOKEN_GREATER:
+    case TokenType::TOKEN_GREATER_EQUAL:
+    case TokenType::TOKEN_LESS:
+    case TokenType::TOKEN_LESS_EQUAL:
+      return Parser::Precedence::PREC_COMPARISON;
+
+    case TokenType::TOKEN_PLUS:
+    case TokenType::TOKEN_MINUS:
+      return Parser::Precedence::PREC_TERM;
+
+    case TokenType::TOKEN_STAR:
+    case TokenType::TOKEN_SLASH:
+      return Parser::Precedence::PREC_FACTOR;
+
+    case TokenType::TOKEN_AND:
+      return Parser::Precedence::PREC_AND;
+
+    case TokenType::TOKEN_OR:
+      return Parser::Precedence::PREC_OR;
+
+    default:
+      return Parser::Precedence::PREC_NONE;
   }
 }
 
 Parser::Parser(std::vector<Token> tokens)
     : tokens(tokens), hadError(false), panicMode(false), currentIndex(0) {}
+
+ParserError::ParserError(Token token, const char *m) : mToken(token), msg(m) {}
+
+const char *ParserError::what() const noexcept { return msg; }
+
+const Token ParserError::getToken() const { return mToken; }
+
+const bool Parser::getHadError() const { return hadError; }
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse() {
   if (!this->tokens.empty()) {
@@ -179,32 +202,32 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence) {
 
 std::unique_ptr<Expr> Parser::parseNud(const Token &token) {
   switch (token.type) {
-  // ---- Literals ----
   case TokenType::TOKEN_FALSE:
     return std::make_unique<BooleanExpr>(false);
+
   case TokenType::TOKEN_TRUE:
     return std::make_unique<BooleanExpr>(true);
+
   case TokenType::TOKEN_NIL:
-    return std::make_unique<LiteralExpr>(std::monostate{});  
+    return std::make_unique<LiteralExpr>(std::monostate{});
+
   case TokenType::TOKEN_NUMBER: {
-    double value = std::stod(token.lexeme);
-    return std::make_unique<LiteralExpr>(value);
-    }
+      double value = std::stod(token.lexeme);
+      return std::make_unique<LiteralExpr>(value);
+  }
   case TokenType::TOKEN_STRING:
     return std::make_unique<LiteralExpr>(token.lexeme);
 
-  // --- Grouping -----
   case TokenType::TOKEN_LEFT_PAREN: {
     std::unique_ptr<Expr> expr = expression();
     consume(TokenType::TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
     return std::make_unique<GroupingExpr>(std::move(expr));
   }
 
-  // ---- Prefix Operators
   case TokenType::TOKEN_BANG:
   case TokenType::TOKEN_MINUS: {
     TokenType op = token.type;
-    std::unique_ptr<Expr> right = expression();
+    std::unique_ptr<Expr> right = parsePrecedence(Precedence::PREC_UNARY);
     return std::make_unique<PrefixExpr>(op, std::move(right));
   }
 

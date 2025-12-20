@@ -12,7 +12,19 @@ enum OpCode {
   OP_MUL,
   OP_DIV,
   OP_PRINT,
-  OP_POP
+  OP_POP,
+  OP_EQUAL,
+  OP_NOT_EQUAL,
+  OP_NOT,
+  OP_GREATER,
+  OP_GREATER_EQUAL,
+  OP_LESS,
+  OP_LESS_EQUAL,
+  OP_FALSE,
+  OP_TRUE,
+  OP_NIL,
+  OP_AND,
+  OP_OR
 };
 
 struct Instruction {

@@ -26,6 +26,8 @@ public:
     PREC_PRIMARY
   };
 
+  const bool getHadError() const;
+
 private:
   std::vector<Token> tokens;
   std::vector<std::unique_ptr<Stmt>> stmts;
@@ -61,15 +63,16 @@ private:
   std::unique_ptr<Expr> parsePrecedence(Precedence precedence);
   std::unique_ptr<Expr> expression();
   std::unique_ptr<Expr> parseNud(const Token &token);
+  std::unique_ptr<Expr> parseBinary(const Token &token);
 
   void synchronize();
 };
 
 class ParserError : public std::exception {
 public:
-  ParserError(Token token, const char *m) : mToken(token), msg(m) {}
-  const char *what() const noexcept override { return msg; }
-  const Token getToken() const { return mToken; }
+  ParserError(Token token, const char *m);
+  const char *what() const noexcept override;
+  const Token getToken() const;
 
 private:
   Token mToken;

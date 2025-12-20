@@ -12,6 +12,24 @@ const char *tokenToOperator(TokenType type) {
     return "/";
   case TokenType::TOKEN_BANG:
     return "!";
+  case TokenType::TOKEN_GREATER:
+    return ">";
+  case TokenType::TOKEN_GREATER_EQUAL:
+    return ">=";
+  case TokenType::TOKEN_LESS:
+    return "<";
+  case TokenType::TOKEN_LESS_EQUAL:
+    return "<=";
+  case TokenType::TOKEN_EQUAL:
+    return "=";
+  case TokenType::TOKEN_EQUAL_EQUAL:
+    return "==";
+  case TokenType::TOKEN_BANG_EQUAL:
+    return "!=";
+  case TokenType::TOKEN_AND:
+    return "and";
+  case TokenType::TOKEN_OR:
+    return "or";
   default:
     return "forget to add";
   }

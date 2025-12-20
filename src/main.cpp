@@ -38,6 +38,10 @@ static void run(char *line) {
 
   std::vector<std::unique_ptr<Stmt>> syntaxTree = parser.parse();
 
+  if (parser.getHadError()) {
+    return;
+  }
+
   if (isInDebugMode) {
     for (const auto &stmt : syntaxTree)
     if (stmt) {
@@ -52,7 +56,8 @@ static void run(char *line) {
   compiler.compile();
 
   if (isInDebugMode) {
-  disassembleChunk(bytecode, "_main");
+    disassembleChunk(bytecode, "_main");
+    std::cout << std::endl;
   }
 
   VM::Machine vm(bytecode, isInDebugMode);
