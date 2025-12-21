@@ -2,7 +2,6 @@
 
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -23,17 +22,9 @@ bool isTruthy(Value value) {
 }
 
 template <typename T>
-bool isType(Value value) {
-  return std::visit([](auto&& value) {
-    using v_type = std::decay_t<decltype(value)>;
-
-    if constexpr (std::is_same_v<v_type, T>) {
-      return true;
-    } else {
-      return false;
-    }
-  }, value);
- }
+bool isType(const Value& value) {
+  return std::holds_alternative<T>(value);
+}
 
 template <typename Op>
 void binaryCompare(std::vector<Value>& stack, Op op) {
@@ -46,6 +37,7 @@ void binaryCompare(std::vector<Value>& stack, Op op) {
 }
 
 void calculate(std::vector<Value>& stack, OpCode op) {
+  // this is a mess, pls update this
   Value b = stack.back();
   stack.pop_back();
   Value a = stack.back();
@@ -64,15 +56,67 @@ void calculate(std::vector<Value>& stack, OpCode op) {
       case OpCode::OP_DIV:
         return stack.push_back(a_val / b_val);
       default:
-        return;
+        throw std::runtime_error("Invalid number operation.");
     }
-  } else if (isType<std::string>(a) && isType<std::string>(b)) {
+  }
+
+  if (isType<std::string>(a) && isType<std::string>(b)) {
     std::string a_val = std::get<std::string>(a);
     std::string b_val = std::get<std::string>(b);
 
     if (op == OpCode::OP_ADD) {
       return stack.push_back(a_val + b_val);
     }
+
+    throw std::runtime_error("Invalid string operation.");
+  }
+
+  if (isType<std::string>(a) && isType<double>(b)) {
+    std::string a_val = std::get<std::string>(a);
+    double b_val = std::get<double>(b);
+
+    if (op == OpCode::OP_ADD) {
+      return stack.push_back(a_val + std::to_string(b_val));
+    }
+
+    if (op == OpCode::OP_MUL) {
+      int b_int = static_cast<int>(b_val);
+
+      std::string result;
+      result.reserve(a_val.size() * b_int);
+      for (int i = 0; i < b_int; ++i) {
+        result += a_val;
+      }
+
+      stack.push_back(result);
+      return;
+    }
+
+    throw std::runtime_error("Invalid number and string operation.");
+  }
+
+  if (isType<std::string>(b) && isType<double>(a)) {
+    std::string b_val = std::get<std::string>(b);
+    double a_val = std::get<double>(a);
+
+    if (op == OpCode::OP_ADD) {
+      return stack.push_back(b_val + std::to_string(a_val));
+    }
+
+    if (op == OpCode::OP_MUL) {
+      int a_int = static_cast<int>(a_val);
+
+      std::string result;
+      result.reserve(b_val.size() * a_int);
+      for (int i = 0; i < a_int; ++i) {
+        result += a_val;
+      }
+
+      stack.push_back(result);
+      return;
+    }
+
+    throw std::runtime_error("Invalid number and string operation.");
   }
   throw std::runtime_error("You can only do operations in numbers or strings.");
 }
@@ -83,8 +127,8 @@ VM::Machine::Machine(const std::vector<Instruction> &bytecode, bool debug)
   stack.reserve(1024);
 }
 
-void VM::Machine::run() {
-  while (ip < code.size()) {
+InterpretResult VM::Machine::run() {
+  for (;;) {
 
     if (debugMode) {
       std::cout << "     ";
@@ -107,9 +151,6 @@ void VM::Machine::run() {
       case OpCode::OP_CONSTANT:
         stack.push_back(instruction.operand);
         break;
-
-      case OpCode::OP_RETURN:
-        return;
 
       case OpCode::OP_ADD: {
         if (std::holds_alternative<std::string>(stack.back())) {
@@ -154,7 +195,7 @@ void VM::Machine::run() {
 
       case OpCode::OP_PRINT: {
         if (stack.empty()) {
-          throw std::runtime_error("Stack underflow in OP_PRINT");
+          return InterpretResult::INTERPRET_RUNTIME_ERROR;
         }
 
         Value value = stack.back();
@@ -170,6 +211,7 @@ void VM::Machine::run() {
         stack.pop_back();
 
         stack.push_back(!isTruthy(value));
+        break;
       }
 
       case OpCode::OP_TRUE:
@@ -227,8 +269,11 @@ void VM::Machine::run() {
         break;
       }
 
+      case OpCode::OP_RETURN:
+        return InterpretResult::INTERPRET_OK;
+
       default:
-        throw std::runtime_error("forgot to add maybe");
+        return InterpretResult::INTERPRET_RUNTIME_ERROR;
     }
   }
 }

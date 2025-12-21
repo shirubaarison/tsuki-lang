@@ -32,6 +32,12 @@ struct Instruction {
   Value operand;
 };
 
+enum class InterpretResult {
+  INTERPRET_OK,
+  INTERPRET_COMPILE_ERROR,
+  INTERPRET_RUNTIME_ERROR
+};
+
 namespace VM {
 class Machine {
 private:
@@ -43,7 +49,7 @@ private:
 
 public:
   Machine(const std::vector<Instruction> &bytecode, bool debug = false);
-  void run();
+  InterpretResult run();
 };
 
 } // namespace VM
