@@ -109,5 +109,9 @@ void disassembleInstruction(const Instruction& instr, size_t offset)
     case OpCode::OP_GET_GLOBAL:
       std::cout << "OP_GET_GLOBAL\n";
       break;
+
+    case OpCode::OP_SET_GLOBAL:
+      std::cout << "OP_SET_GLOBAL\n";
+      break;
   }
 }

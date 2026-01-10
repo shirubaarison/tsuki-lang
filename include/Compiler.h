@@ -4,10 +4,12 @@
 #include "VM/VM.h"
 #include "Visitor.h"
 #include "stmt/Stmt.h"
+
 #include <memory>
 
 class Compiler : public Visitor {
 private:
+  VM::Machine& machine;
   std::vector<Instruction>& chunk;
   std::vector<std::unique_ptr<Stmt>> syntaxTree;
 
@@ -15,8 +17,12 @@ private:
   void emit(OpCode op, const Value& value);
   void emitConstant(const Value& value);
 public:
-  Compiler(std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree);
+  Compiler(VM::Machine& machine, std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree);
+  Compiler();
   void compile();
+
+  void setTargetChunk(std::vector<Instruction>& targetChunk);
+  void setSyntaxTree(std::vector<std::unique_ptr<Stmt>> syntaxTree);
 
   void visitLiteralExpr(const LiteralExpr* expr) override;
   void visitBinaryExpr(const BinaryExpr* expr) override;

@@ -233,6 +233,14 @@ InterpretResult VM::Machine::run() {
         return InterpretResult::INTERPRET_RUNTIME_ERROR;
       }
 
+      case OpCode::OP_SET_GLOBAL: {
+        Value var { stack.back() };
+        stack.pop_back();
+        auto& name = std::get<std::string>(instruction.operand);
+        globals[name] = var;
+        break;
+      }
+
       case OpCode::OP_RETURN:
         return InterpretResult::INTERPRET_OK;
 
@@ -240,4 +248,9 @@ InterpretResult VM::Machine::run() {
         return InterpretResult::INTERPRET_RUNTIME_ERROR;
     }
   }
+}
+
+bool VM::Machine::globalExist(const std::string& name) const
+{
+  return globals.contains(name);
 }

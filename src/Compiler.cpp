@@ -15,9 +15,11 @@
 #include "stmt/ExprStmt.h"
 #include "stmt/VarStmt.h"
 #include "stmt/PrintStmt.h"
+#include <memory>
+#include <vector>
 
-Compiler::Compiler(std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree)
-  : chunk(targetChunk), syntaxTree(std::move(syntaxTree)) {}
+Compiler::Compiler(VM::Machine& machine, std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree)
+  : machine(machine), chunk(targetChunk), syntaxTree(std::move(syntaxTree)) {}
 
 void Compiler::compile()
 {
@@ -99,7 +101,7 @@ void Compiler::visitAssignExpr(const AssignExpr* expr)
 {
   expr->getExpression()->accept(*this);
   expr->getName()->accept(*this);
-  emit(OpCode::OP_DEFINE_GLOBAL);
+  emit(OpCode::OP_SET_GLOBAL);
 }
 
 void Compiler::visitBooleanExpr(const BooleanExpr* expr)
@@ -149,5 +151,11 @@ void Compiler::visitIfStmt(const IfStmt* /*stmt*/) {}
 void Compiler::visitVarStmt(const VarStmt* stmt)
 {
   stmt->getExpr()->accept(*this);
-  emit(OpCode::OP_DEFINE_GLOBAL, stmt->getName());
+
+  const std::string& name = stmt->getName();
+  if (machine.globalExist(name)) {
+    emit(OpCode::OP_SET_GLOBAL, name);
+  } else {
+    emit(OpCode::OP_DEFINE_GLOBAL, stmt->getName());
+  }
 }

@@ -56,7 +56,7 @@ void run(std::string& source)
   }
 
   std::vector<Instruction> bytecode;
-  Compiler compiler(bytecode, std::move(syntaxTree));
+  Compiler compiler(vm, bytecode, std::move(syntaxTree));
   compiler.compile();
 
   if (isInDebugMode) {

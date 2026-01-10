@@ -27,7 +27,8 @@ enum OpCode {
   OP_AND,
   OP_OR,
   OP_DEFINE_GLOBAL,
-  OP_GET_GLOBAL
+  OP_GET_GLOBAL,
+  OP_SET_GLOBAL
 };
 
 struct Instruction {
@@ -58,6 +59,8 @@ public:
 
   void setDebugMode(bool setDebugMode);
   void setByteCode(const std::vector<Instruction>& bytecode);
+
+  bool globalExist(const std::string& name) const;
 };
 
 } // namespace VM

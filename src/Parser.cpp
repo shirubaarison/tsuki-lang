@@ -219,7 +219,7 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence)
 }
 
 std::unique_ptr<Expr> Parser::parseLhs(bool canAssign, std::unique_ptr<Expr> lhs, TokenType op, std::unique_ptr<Expr> rhs) {
-  if (canAssign && op == TokenType::TOKEN_EQUAL) 
+  if (canAssign && op == TokenType::TOKEN_EQUAL)
   {
     if (dynamic_cast<const LiteralExpr*>(lhs.get()) == nullptr) {
       return nullptr;
