@@ -8,6 +8,7 @@
 #include "Lexer.h"
 #include "TokenType.h"
 
+#include "Value.h"
 #include "stmt/VarStmt.h"
 #include "stmt/ExprStmt.h"
 #include "stmt/PrintStmt.h"
@@ -243,7 +244,12 @@ std::unique_ptr<Expr> Parser::parseNud(const Token& token)
       return std::make_unique<LiteralExpr>(std::monostate{});
 
     case TokenType::TOKEN_NUMBER: {
-      double value = std::stod(token.lexeme);
+      Value value;
+      if (token.lexeme.contains('.')) {
+        value = std::stod(token.lexeme);
+      } else {
+        value = std::stoi(token.lexeme);
+      }
       return std::make_unique<LiteralExpr>(value);
     }
     case TokenType::TOKEN_STRING:
