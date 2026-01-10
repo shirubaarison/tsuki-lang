@@ -25,12 +25,15 @@ print result;
 ## Building and Running
 
 ```bash
-# Compile the project
-make
+# generate build files in build/ directory
+cmake -B build
+
+# compile the project
+cmake --build build
 
 # Run a tsuki program
-./tsuki program.tsuki
+./build/bin/TsukiLang program.tsuki
 
 # or REPL
-./tsuki
+./build/bin/TsukiLang --debug
 ```
