@@ -10,7 +10,6 @@
 #include "Value.h"
 
 namespace {
-
 bool isTruthy(Value value)
 {
   return std::visit(
@@ -37,90 +36,37 @@ void binaryCompare(std::vector<Value>& stack, Op op)
   stack.push_back(op(a, b));
 }
 
-void calculate(std::vector<Value>& stack, OpCode op) 
+void calculate(std::vector<Value>& stack, OpCode op)
 {
-  // this is a mess, pls update this
   Value b = stack.back();
   stack.pop_back();
   Value a = stack.back();
   stack.pop_back();
 
-  if (isType<double>(a) && isType<double>(b)) {
-    double a_val = std::get<double>(a);
-    double b_val = std::get<double>(b);
-    switch (op) {
-      case OpCode::OP_ADD:
-        return stack.push_back(a_val + b_val);
-      case OpCode::OP_SUB:
-        return stack.push_back(a_val - b_val);
-      case OpCode::OP_MUL:
-        return stack.push_back(a_val * b_val);
-      case OpCode::OP_DIV:
-        return stack.push_back(a_val / b_val);
-      default:
-        throw std::runtime_error("Invalid number operation.");
-    }
+  auto to_double = [](const Value& v) -> double {
+    if (isType<int>(v))    return static_cast<double>(std::get<int>(v));
+    if (isType<double>(v)) return std::get<double>(v);
+    throw std::runtime_error("Non-numeric value.");
+  };
+
+  double lhs = to_double(a);
+  double rhs = to_double(b);
+
+  double result;
+  switch (op) {
+    case OpCode::OP_ADD: result = lhs + rhs; break;
+    case OpCode::OP_SUB: result = lhs - rhs; break;
+    case OpCode::OP_MUL: result = lhs * rhs; break;
+    case OpCode::OP_DIV: result = lhs / rhs; break;
+    default:
+      throw std::runtime_error("Invalid numeric operation.");
   }
 
-  if (isType<std::string>(a) && isType<std::string>(b)) {
-    std::string a_val = std::get<std::string>(a);
-    std::string b_val = std::get<std::string>(b);
-
-    if (op == OpCode::OP_ADD) {
-      return stack.push_back(a_val + b_val);
-    }
-
-    throw std::runtime_error("Invalid string operation.");
+  if (isType<int>(a) && isType<int>(b) && op != OpCode::OP_DIV) {
+    stack.push_back(static_cast<int>(result));
+  } else {
+    stack.push_back(result);
   }
-
-  if (isType<std::string>(a) && isType<double>(b)) {
-    std::string a_val = std::get<std::string>(a);
-    double b_val = std::get<double>(b);
-
-    if (op == OpCode::OP_ADD) {
-      return stack.push_back(a_val + std::to_string(b_val));
-    }
-
-    if (op == OpCode::OP_MUL) {
-      int b_int = static_cast<int>(b_val);
-
-      std::string result;
-      result.reserve(a_val.size() * b_int);
-      for (int i = 0; i < b_int; ++i) {
-        result += a_val;
-      }
-
-      stack.push_back(result);
-      return;
-    }
-
-    throw std::runtime_error("Invalid number and string operation.");
-  }
-
-  if (isType<std::string>(b) && isType<double>(a)) {
-    std::string b_val = std::get<std::string>(b);
-    double a_val = std::get<double>(a);
-
-    if (op == OpCode::OP_ADD) {
-      return stack.push_back(b_val + std::to_string(a_val));
-    }
-
-    if (op == OpCode::OP_MUL) {
-      int a_int = static_cast<int>(a_val);
-
-      std::string result;
-      result.reserve(b_val.size() * a_int);
-      for (int i = 0; i < a_int; ++i) {
-        result += a_val;
-      }
-
-      stack.push_back(result);
-      return;
-    }
-
-    throw std::runtime_error("Invalid number and string operation.");
-  }
-  throw std::runtime_error("You can only do operations in numbers or strings.");
 }
 } // namespace
 
@@ -169,38 +115,13 @@ InterpretResult VM::Machine::run() {
 
     const auto& instruction = code[ip++];
 
-    switch (instruction.op) 
+    switch (instruction.op)
     {
       case OpCode::OP_CONSTANT:
         stack.push_back(instruction.operand);
         break;
 
-      case OpCode::OP_ADD: {
-        if (std::holds_alternative<std::string>(stack.back())) {
-          std::string b = std::get<std::string>(stack.back());
-          stack.pop_back();
-          if (std::holds_alternative<std::string>(stack.back())) {
-            std::string a = std::get<std::string>(stack.back());
-            stack.pop_back();
-
-            stack.push_back(a + b);
-          }
-        } else {
-          double b = std::get<double>(stack.back());
-          stack.pop_back();
-          if (std::holds_alternative<std::string>(stack.back())) {
-            std::string a = std::get<std::string>(stack.back());
-            stack.pop_back();
-            stack.push_back(a + std::to_string(b));
-          } else {
-            double a = std::get<double>(stack.back());
-            stack.pop_back();
-            stack.push_back(a + b);
-          }
-        }
-        break;
-      }
-
+      case OpCode::OP_ADD:
       case OpCode::OP_SUB:
       case OpCode::OP_MUL:
       case OpCode::OP_DIV:
