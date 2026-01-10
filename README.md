@@ -9,8 +9,8 @@ Tsuki is a dynamically-typed interpreted language that compiles source code to b
 ## Example Code
 
 ```javascript
-var x = 10;
-var y = 20;
+x = 10;
+y = 20;
 
 if (x < y) {
     print "x is less than y";
@@ -18,7 +18,7 @@ if (x < y) {
     print "x is greater or equal to y";
 }
 
-var result = x + y * 2;
+result = x + y * 2;
 print result;
 ```
 
