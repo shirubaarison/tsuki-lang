@@ -26,7 +26,7 @@ public:
     PREC_PRIMARY
   };
 
-  const bool getHadError() const;
+  bool getHadError() const;
 
 private:
   std::vector<Token> tokens;
@@ -42,6 +42,7 @@ private:
 
   Token scanToken();
   Token peek() const;
+  Token peekAhead() const;
 
   bool isAtEnd();
   bool check(TokenType type);

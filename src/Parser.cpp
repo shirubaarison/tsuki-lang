@@ -67,7 +67,7 @@ const char *ParserError::what() const noexcept { return msg; }
 
 const Token ParserError::getToken() const { return mToken; }
 
-const bool Parser::getHadError() const { return hadError; }
+bool Parser::getHadError() const { return hadError; }
 
 std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
@@ -86,12 +86,11 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 std::unique_ptr<Stmt> Parser::declaration()
 {
   try {
-    if (match(TokenType::TOKEN_VAR)) {
-      return varDeclaration();
-    } else {
-      return statement();
-    }
+      if (peekAhead().type == TokenType::TOKEN_EQUAL) {
+        return varDeclaration();
+      }
 
+      return statement();
   } catch (const ParserError &parserError) {
     error(parserError.getToken(), parserError.what());
 
@@ -129,7 +128,7 @@ std::unique_ptr<Stmt> Parser::statement()
   } else if (match(TokenType::TOKEN_LEFT_BRACE)){
     return block();
   } else {
-    return expressionStatement(); 
+    return expressionStatement();
   }
 }
 
@@ -296,6 +295,15 @@ Token Parser::peek() const
   }
 
   return tokens[currentIndex];
+}
+
+Token Parser::peekAhead() const
+{
+  if (currentIndex >= tokens.size()) {
+    return tokens.back();
+  }
+
+  return tokens[currentIndex + 1];
 }
 
 void Parser::error(Token token, const std::string& message)

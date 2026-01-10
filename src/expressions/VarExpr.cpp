@@ -7,7 +7,6 @@ VarExpr::VarExpr(const std::string& name, std::unique_ptr<Expr> rhs)
 
 void VarExpr::print(std::ostream& builder) const
 {
-  builder << mName;
   rhs->print(builder);
 }
 

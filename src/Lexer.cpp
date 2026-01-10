@@ -29,7 +29,7 @@ Lexer::Lexer(std::string& source) : source(source), line(1)
   keywords.emplace("super", TokenType::TOKEN_SUPER);
   keywords.emplace("this", TokenType::TOKEN_THIS);
   keywords.emplace("true", TokenType::TOKEN_TRUE);
-  keywords.emplace("var", TokenType::TOKEN_VAR);
+  // keywords.emplace("var", TokenType::TOKEN_VAR);
   keywords.emplace("while", TokenType::TOKEN_WHILE);
 }
 

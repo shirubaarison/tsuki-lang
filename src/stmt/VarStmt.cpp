@@ -7,7 +7,7 @@ VarStmt::VarStmt(const std::string& name, std::unique_ptr<VarExpr> varExpr)
 
 void VarStmt::print(std::ostream& builder) const
 {
-  builder << "var " << mName;
+  builder << mName;
   if (mExpr) {
     builder << " = ";
     mExpr->print(builder);
