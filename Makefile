@@ -1,29 +1,13 @@
-TARGET = tsuki
-CXX = g++
-CXXFLAGS = -Wall -Iinclude -g
-LDFLAGS = -lreadline
-SRCDIR = src
-OBJDIR = obj
+.PHONY: all build clean run
 
-SOURCES = $(wildcard $(SRCDIR)/*.cpp) \
-					$(wildcard $(SRCDIR)/expressions/*.cpp) \
-					$(wildcard $(SRCDIR)/stmt/*.cpp)
-OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+all: build run
 
-all: $(TARGET)
-
-$(TARGET): $(OBJECTS)
-	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
-
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJDIR):
-	mkdir -p $(OBJDIR)
+build:
+	cmake -B build
+	cmake --build ./build
 
 clean:
-	rm -f $(OBJECTS) $(TARGET)
-	rm -rf $(OBJDIR)
+	rm -rf build
 
-.PHONY: all clean
+run:
+	./build/bin/TsukiLang --debug
