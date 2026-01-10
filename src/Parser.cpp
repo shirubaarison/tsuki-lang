@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <variant>
 
 #include "Lexer.h"
 #include "TokenType.h"
@@ -14,6 +15,7 @@
 #include "stmt/BlockStmt.h"
 
 #include "expressions/BinaryExpr.h"
+#include "expressions/AssignExpr.h"
 #include "expressions/BooleanExpr.h"
 #include "expressions/Expr.h"
 #include "expressions/GroupingExpr.h"
@@ -187,6 +189,8 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence) {
     Token op = peek();
     advance();
 
+    bool canAssign = precedence <= Precedence::PREC_ASSIGNMENT;
+
     std::unique_ptr<Expr> rhs = parsePrecedence(
         static_cast<Precedence>(static_cast<int>(getPrecedence(op)) + 1));
 
@@ -194,10 +198,21 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence) {
       return nullptr;
     }
 
-    lhs = std::make_unique<BinaryExpr>(std::move(lhs), op.type, std::move(rhs));
+    lhs = parseLhs(canAssign, std::move(lhs), op.type, std::move(rhs));
   }
 
   return lhs;
+}
+
+std::unique_ptr<Expr> Parser::parseLhs(bool canAssign, std::unique_ptr<Expr> lhs, TokenType op, std::unique_ptr<Expr> rhs) {
+  if (canAssign && op == TokenType::TOKEN_EQUAL) {
+    if (dynamic_cast<const LiteralExpr*>(lhs.get()) == nullptr) {
+      return nullptr;
+    }
+    return std::make_unique<AssignExpr>(std::move(lhs), std::move(rhs));
+  }
+
+  return std::make_unique<BinaryExpr>(std::move(lhs), op, std::move(rhs));
 }
 
 std::unique_ptr<Expr> Parser::parseNud(const Token &token) {

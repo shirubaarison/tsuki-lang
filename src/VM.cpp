@@ -1,5 +1,6 @@
 #include "VM/VM.h"
 
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -127,6 +128,18 @@ VM::Machine::Machine(const std::vector<Instruction> &bytecode, bool debug)
   stack.reserve(1024);
 }
 
+VM::Machine::Machine() {
+  stack.reserve(1024);
+}
+
+void VM::Machine::setDebugMode(bool setDebugMode) { debugMode = setDebugMode; }
+
+void VM::Machine::setByteCode(const std::vector<Instruction>& bytecode) 
+{
+  ip = 0;
+  code = bytecode;
+}
+
 InterpretResult VM::Machine::run() {
   for (;;) {
 
@@ -138,6 +151,17 @@ InterpretResult VM::Machine::run() {
       for (const auto &val : stack) {
         std::cout << "[ ";
         std::visit(ValuePrinter{}, val);
+        std::cout << " ]";
+      }
+      std::cout << std::endl;
+      std::cout << "     ";
+      if (globals.empty()) {
+        std::cout << "[ ]";
+      }
+      for (auto it = globals.cbegin(); it != globals.cend(); ++it) {
+        std::cout << "[ ";
+        std::cout << it->first << " : ";
+        std::visit(ValuePrinter{}, it->second);
         std::cout << " ]";
       }
       std::cout << std::endl;
@@ -267,6 +291,26 @@ InterpretResult VM::Machine::run() {
         }
 
         break;
+      }
+
+      case OpCode::OP_DEFINE_GLOBAL: {
+        Value var { stack.back() };
+        stack.pop_back();
+        auto& name = std::get<std::string>(instruction.operand);
+        globals.insert({ name, var});
+        break;
+      }
+
+      case OpCode::OP_GET_GLOBAL: {
+        auto it = globals.find(std::get<std::string>(instruction.operand));
+
+        if (it != globals.end()) {
+          stack.push_back(it->second);
+          break;
+        }
+
+        std::cerr << "Variable not found." << std::endl;
+        return InterpretResult::INTERPRET_RUNTIME_ERROR;
       }
 
       case OpCode::OP_RETURN:

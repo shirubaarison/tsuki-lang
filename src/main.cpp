@@ -10,7 +10,6 @@
 #include "Compiler.h"
 #include "Lexer.h"
 #include "Parser.h"
-#include "TokenType.h"
 #include "VM/Debug.h"
 #include "VM/VM.h"
 
@@ -18,103 +17,118 @@
 
 bool isInDebugMode = false;
 
-static void run(char *line) {
-  std::string str(line);
+VM::Machine vm{};
 
-  Lexer lexer(str);
+namespace {
+  template <typename T>
+  void display_type() {
+    std::string func_name(__PRETTY_FUNCTION__);
+    std::string tmp = func_name.substr(func_name.find_first_of("[") + 1);
+    std::string type = "type" + tmp.substr(1, tmp.size() - 2);
+    std::cout << type << std::endl;
+  }
 
-  std::vector<Token> tokens = lexer.scanTokens();
+  void run(char *line) {
+    std::string str(line);
 
-  if (isInDebugMode) {
-    for (Token t : tokens) {
-      if (t.type != TokenType::TOKEN_EOF) {
-        std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
+    Lexer lexer(str);
+
+    std::vector<Token> tokens = lexer.scanTokens();
+
+    if (isInDebugMode) {
+      for (Token t : tokens) {
+        if (t.type != TokenType::TOKEN_EOF) {
+          std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
+        }
       }
-    }
-    std::cout << std::endl;
-  }
-
-  Parser parser(tokens);
-
-  std::vector<std::unique_ptr<Stmt>> syntaxTree = parser.parse();
-
-  if (parser.getHadError()) {
-    return;
-  }
-
-  if (isInDebugMode) {
-    for (const auto &stmt : syntaxTree)
-    if (stmt) {
-      stmt->print(std::cout);
       std::cout << std::endl;
     }
-    std::cout << std::endl;
-  }
 
-  std::vector<Instruction> bytecode;
-  Compiler compiler(bytecode, std::move(syntaxTree));
-  compiler.compile();
+    Parser parser(tokens);
 
-  if (isInDebugMode) {
-    disassembleChunk(bytecode, "_main");
-    std::cout << std::endl;
-  }
+    std::vector<std::unique_ptr<Stmt>> syntaxTree = parser.parse();
 
-  VM::Machine vm(bytecode, isInDebugMode);
-  vm.run();
-}
-
-static void help(bool man = false) {
-  std::cout << "Tsuki is a dynamically-typed interpreted language that "
-               "compiles source code to bytecode instructions executed by a "
-               "stack-based virtual machine" << std::endl;
-  if (!man) {
-    std::cout << "Available commands:\n" << "  - help\n  - quit" << std::endl;
-  } else {
-    std::cout << "Available options:\n";
-    std::cout << "  -h, --help  \t give this help list" << std::endl;
-    std::cout << "  -d, --debug \t print debug information about lexer, parser, compilated code and vm backtrace" << std::endl;
-  }
-}
-
-static void repl() {
-  std::cout << "Tsuki version " << VERSION << "\nType \"help\" for more information.\n";
-
-  char *line;
-
-  using_history();
-
-  for (;;) {
-    line = readline(">> ");
-
-    if (!line) {
-      break;
+    if (parser.getHadError()) {
+      return;
     }
 
-    add_history(line);
-
-    if (strcmp(line, "quit") == 0) {
-      free(line);
-      break;
-    } else if (strcmp(line, "clear") == 0) {
-      std::cout << "\033[2J";
-      continue;
-    } else if (strcmp(line, "help") == 0) {
-      help();
-      continue;
+    if (isInDebugMode) {
+      for (const auto &stmt : syntaxTree)
+      if (stmt) {
+        display_type<decltype(stmt)>();
+        stmt->print(std::cout);
+        std::cout << std::endl;
+      }
+      std::cout << std::endl;
     }
 
-    run(line);
-  }
-}
+    std::vector<Instruction> bytecode;
+    Compiler compiler(bytecode, std::move(syntaxTree));
+    compiler.compile();
 
-bool cmdOptionExists(char** begin, char** end, const std::string& option) {
-    return std::find(begin, end, option) != end;
+    if (isInDebugMode) {
+      disassembleChunk(bytecode, "_main");
+      std::cout << std::endl;
+    }
+
+    // vm(bytecode, isInDebugMode);
+    vm.setByteCode(bytecode);
+    vm.run();
+  }
+
+  void help(bool man = false) {
+    std::cout << "Tsuki is a dynamically-typed interpreted language that "
+                "compiles source code to bytecode instructions executed by a "
+                "stack-based virtual machine" << std::endl;
+    if (!man) {
+      std::cout << "Available commands:\n" << "  - help\n  - quit" << std::endl;
+    } else {
+      std::cout << "Available options:\n";
+      std::cout << "  -h, --help  \t give this help list" << std::endl;
+      std::cout << "  -d, --debug \t print debug information about lexer, parser, compilated code and vm backtrace" << std::endl;
+    }
+  }
+
+  void repl() {
+    std::cout << "Tsuki version " << VERSION << "\nType \"help\" for more information.\n";
+
+    char *line;
+
+    using_history();
+
+    for (;;) {
+      line = readline(">> ");
+
+      if (!line) {
+        break;
+      }
+
+      add_history(line);
+
+      if (strcmp(line, "quit") == 0) {
+        free(line);
+        break;
+      } else if (strcmp(line, "clear") == 0) {
+        std::cout << "\033[2J";
+        continue;
+      } else if (strcmp(line, "help") == 0) {
+        help();
+        continue;
+      }
+
+      run(line);
+    }
+  }
+
+  bool cmdOptionExists(char** begin, char** end, const std::string& option) {
+      return std::find(begin, end, option) != end;
+  }
 }
 
 int main(int argc, char *argv[]) {
   if (cmdOptionExists(argv, argv + argc, "--debug") || cmdOptionExists(argv, argv + argc, "-d")) {
     isInDebugMode = true;
+    vm.setDebugMode(isInDebugMode);
     repl();
   } else if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h")) {
     help(true);

@@ -9,7 +9,11 @@
 #include "expressions/GroupingExpr.h"
 #include "expressions/LiteralExpr.h"
 #include "expressions/PrefixExpr.h"
+#include "expressions/AssignExpr.h"
+#include "expressions/VarExpr.h"
+#include "expressions/NameExpr.h"
 #include "stmt/ExprStmt.h"
+#include "stmt/VarStmt.h"
 #include "stmt/PrintStmt.h"
 
 Compiler::Compiler(std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree)
@@ -25,6 +29,10 @@ void Compiler::compile() {
 
 void Compiler::emit(OpCode op) {
   chunk.push_back(Instruction{op, Value{}});
+}
+
+void Compiler::emit(OpCode op, const Value& value) {
+  chunk.push_back(Instruction{op, value});
 }
 
 void Compiler::emitConstant(const Value& value) {
@@ -81,7 +89,11 @@ void Compiler::visitBinaryExpr(const BinaryExpr *expr) {
   }
 }
 
-void Compiler::visitAssignExpr(const AssignExpr * /*expr*/) {}
+void Compiler::visitAssignExpr(const AssignExpr *expr) {
+  expr->getExpression()->accept(*this);
+  expr->getName()->accept(*this);
+  emit(OpCode::OP_DEFINE_GLOBAL);
+}
 
 void Compiler::visitBooleanExpr(const BooleanExpr *expr) {
   if (expr->getValue()) {
@@ -95,13 +107,17 @@ void Compiler::visitGroupingExpr(const GroupingExpr *expr) {
   expr->getExpr()->accept(*this);
 }
 
-void Compiler::visitNameExpr(const NameExpr * /*expr*/) {}
+void Compiler::visitNameExpr(const NameExpr *expr) {
+  emit(OpCode::OP_GET_GLOBAL, expr->getName());
+}
 
 void Compiler::visitPostfixExpr(const PostfixExpr * /*expr*/) {}
 
 void Compiler::visitPrefixExpr(const PrefixExpr *expr) {}
 
-void Compiler::visitVarExpr(const VarExpr * /*expr*/) {}
+void Compiler::visitVarExpr(const VarExpr *expr) {
+  expr->getExpression()->accept(*this);
+}
 
 void Compiler::visitPrintStmt(const PrintStmt *stmt) {
   stmt->getExpr()->accept(*this);
@@ -117,4 +133,7 @@ void Compiler::visitExprStmt(const ExprStmt *stmt) {
 
 void Compiler::visitIfStmt(const IfStmt * /*stmt*/) {}
 
-void Compiler::visitVarStmt(const VarStmt * /*stmt*/) {}
+void Compiler::visitVarStmt(const VarStmt *stmt) {
+  stmt->getExpr()->accept(*this);
+  emit(OpCode::OP_DEFINE_GLOBAL, stmt->getName());
+}

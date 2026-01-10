@@ -29,6 +29,10 @@ Lexer::Lexer(std::string source) : source(std::move(source)), line(1) {
   keywords.emplace("while", TokenType::TOKEN_WHILE);
 }
 
+void Lexer::setSource(std::string& source) {
+  this->source = std::move(source);
+}
+
 bool Lexer::isAtEnd() { return current == source.end(); }
 
 Token Lexer::makeToken(TokenType type) {

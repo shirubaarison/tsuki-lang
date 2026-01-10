@@ -13,6 +13,7 @@ public:
   void accept(Visitor &visitor) const override;
 
   const std::string &getName() const;
+  const Expr *getExpression() const;
 
 private:
   const std::string mName;

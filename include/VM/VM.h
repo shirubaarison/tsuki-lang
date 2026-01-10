@@ -1,6 +1,7 @@
 #ifndef VM_H
 #define VM_H
 
+#include <map>
 #include <vector>
 #include "Value.h"
 
@@ -24,7 +25,9 @@ enum OpCode {
   OP_TRUE,
   OP_NIL,
   OP_AND,
-  OP_OR
+  OP_OR,
+  OP_DEFINE_GLOBAL,
+  OP_GET_GLOBAL
 };
 
 struct Instruction {
@@ -38,6 +41,8 @@ enum class InterpretResult {
   INTERPRET_RUNTIME_ERROR
 };
 
+
+
 namespace VM {
 class Machine {
 private:
@@ -46,10 +51,15 @@ private:
 
   std::vector<Instruction> code;
   std::vector<Value> stack;
+  std::map<std::string, Value> globals;
 
 public:
-  Machine(const std::vector<Instruction> &bytecode, bool debug = false);
+  Machine(const std::vector<Instruction>& bytecode, bool debug = false);
+  Machine();
   InterpretResult run();
+
+  void setDebugMode(bool setDebugMode);
+  void setByteCode(const std::vector<Instruction>& bytecode);
 };
 
 } // namespace VM

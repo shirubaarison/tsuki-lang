@@ -12,6 +12,7 @@ private:
   std::vector<std::unique_ptr<Stmt>> syntaxTree;
 
   void emit(OpCode op);
+  void emit(OpCode op, const Value& value);
   void emitConstant(const Value& value);
 public:
   Compiler(std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree);

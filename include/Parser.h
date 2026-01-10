@@ -61,8 +61,11 @@ private:
   std::unique_ptr<Stmt> ifStatement();
 
   std::unique_ptr<Expr> parsePrecedence(Precedence precedence);
+
   std::unique_ptr<Expr> expression();
   std::unique_ptr<Expr> parseNud(const Token &token);
+  std::unique_ptr<Expr> parseLhs(bool canAssign, std::unique_ptr<Expr> lhs,
+                                 TokenType op, std::unique_ptr<Expr> rhs);
   std::unique_ptr<Expr> parseBinary(const Token &token);
 
   void synchronize();
