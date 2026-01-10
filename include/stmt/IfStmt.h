@@ -11,9 +11,9 @@ public:
   IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch,
          std::unique_ptr<Stmt> elseBranch);
 
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
-  virtual void accept(Visitor &visitor) const override;
+  virtual void accept(Visitor& visitor) const override;
 
   const Expr* getCondition() const;
 

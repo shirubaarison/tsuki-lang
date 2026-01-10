@@ -48,8 +48,8 @@ private:
   bool match(TokenType type);
 
   void advance();
-  void consume(TokenType type, const char *message);
-  void error(Token token, const std::string message);
+  void consume(TokenType type, const std::string& message);
+  void error(Token token, const std::string& message);
 
   std::unique_ptr<Stmt> declaration();
   std::unique_ptr<Stmt> varDeclaration();
@@ -63,7 +63,7 @@ private:
   std::unique_ptr<Expr> parsePrecedence(Precedence precedence);
 
   std::unique_ptr<Expr> expression();
-  std::unique_ptr<Expr> parseNud(const Token &token);
+  std::unique_ptr<Expr> parseNud(const Token& token);
   std::unique_ptr<Expr> parseLhs(bool canAssign, std::unique_ptr<Expr> lhs,
                                  TokenType op, std::unique_ptr<Expr> rhs);
   std::unique_ptr<Expr> parseBinary(const Token &token);
@@ -73,13 +73,13 @@ private:
 
 class ParserError : public std::exception {
 public:
-  ParserError(Token token, const char *m);
-  const char *what() const noexcept override;
+  ParserError(Token token, const char* m);
+  const char* what() const noexcept override;
   const Token getToken() const;
 
 private:
   Token mToken;
-  const char *msg;
+  const char* msg;
 };
 
 #endif // !PARSER_H

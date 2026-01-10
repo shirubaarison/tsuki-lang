@@ -10,11 +10,11 @@ class PostfixExpr : public Expr {
 public:
   PostfixExpr(std::unique_ptr<Expr> expr, TokenType op);
 
-  void print(std::ostream &builder) const override;
+  void print(std::ostream& builder) const override;
 
-  void accept(Visitor &visitor) const override;
+  void accept(Visitor& visitor) const override;
 
-  const Expr *getExpr() const;
+  const Expr* getExpr() const;
 
   TokenType getOp() const;
 

@@ -20,19 +20,19 @@ public:
 
   void visitLiteralExpr(const LiteralExpr* expr) override;
   void visitBinaryExpr(const BinaryExpr* expr) override;
-  void visitAssignExpr(const AssignExpr *expr) override;
-  void visitBooleanExpr(const BooleanExpr *expr) override;
-  void visitGroupingExpr(const GroupingExpr *expr) override;
+  void visitAssignExpr(const AssignExpr* expr) override;
+  void visitBooleanExpr(const BooleanExpr* expr) override;
+  void visitGroupingExpr(const GroupingExpr* expr) override;
   void visitNameExpr(const NameExpr* expr) override;
-  void visitPostfixExpr(const PostfixExpr *expr) override;
-  void visitPrefixExpr(const PrefixExpr *expr) override;
-  void visitVarExpr(const VarExpr *expr) override;
+  void visitPostfixExpr(const PostfixExpr* expr) override;
+  void visitPrefixExpr(const PrefixExpr* expr) override;
+  void visitVarExpr(const VarExpr* expr) override;
 
   void visitPrintStmt(const PrintStmt* stmt) override;
-  void visitBlockStmt(const BlockStmt *stmt)override;
-  void visitExprStmt(const ExprStmt *stmt)override;
-  void visitIfStmt(const IfStmt *stmt)override;
-  void visitVarStmt(const VarStmt *stmt)override;
+  void visitBlockStmt(const BlockStmt* stmt)override;
+  void visitExprStmt(const ExprStmt* stmt)override;
+  void visitIfStmt(const IfStmt* stmt)override;
+  void visitVarStmt(const VarStmt* stmt)override;
 };
 
 #endif // !COMPILER_H

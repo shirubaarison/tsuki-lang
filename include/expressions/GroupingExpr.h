@@ -8,7 +8,7 @@
 class GroupingExpr : public Expr {
 public:
   GroupingExpr(std::unique_ptr<Expr> expr);
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
   virtual void accept(Visitor& visitor) const override;
 

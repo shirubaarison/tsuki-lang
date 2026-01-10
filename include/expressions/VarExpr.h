@@ -7,13 +7,13 @@
 
 class VarExpr : public Expr {
 public:
-  VarExpr(const std::string &name, std::unique_ptr<Expr> rhs);
-  void print(std::ostream &builder) const override;
+  VarExpr(const std::string& name, std::unique_ptr<Expr> rhs);
+  void print(std::ostream& builder) const override;
 
-  void accept(Visitor &visitor) const override;
+  void accept(Visitor& visitor) const override;
 
-  const std::string &getName() const;
-  const Expr *getExpression() const;
+  const std::string& getName() const;
+  const Expr* getExpression() const;
 
 private:
   const std::string mName;

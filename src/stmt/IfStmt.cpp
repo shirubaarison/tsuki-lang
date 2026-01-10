@@ -7,7 +7,8 @@ IfStmt::IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch
     : mCondition(std::move(condition)), mThenBranch(std::move(thenBranch)),
       mElseBranch(std::move(elseBranch)) {}
 
-void IfStmt::print(std::ostream &builder) const {
+void IfStmt::print(std::ostream& builder) const
+{
   builder << "if (";
   mCondition->print(builder);
   builder << ")\n";
@@ -18,11 +19,11 @@ void IfStmt::print(std::ostream &builder) const {
   }
 }
 
-void IfStmt::accept(Visitor &visitor) const { visitor.visitIfStmt(this); }
+void IfStmt::accept(Visitor& visitor) const { visitor.visitIfStmt(this); }
 
-const Expr *IfStmt::getCondition() const { return mCondition.get(); }
+const Expr* IfStmt::getCondition() const { return mCondition.get(); }
 
-const Stmt *IfStmt::getThen() const { return mThenBranch.get(); }
+const Stmt* IfStmt::getThen() const { return mThenBranch.get(); }
 
-const Stmt *IfStmt::getElse() const { return mElseBranch.get(); }
+const Stmt* IfStmt::getElse() const { return mElseBranch.get(); }
 

@@ -18,13 +18,13 @@ typedef struct {
 
 class Lexer {
 public:
-  Lexer(std::string source);
+  Lexer(std::string& source);
   std::vector<Token> scanTokens();
 
   void setSource(std::string& source);
 
 private:
-  std::string source;
+  std::string& source;
   std::string::iterator start;
   std::string::iterator current;
 

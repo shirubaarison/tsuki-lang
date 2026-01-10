@@ -7,15 +7,15 @@
 
 class VarStmt : public Stmt {
 public:
-  VarStmt(const std::string &name, std::unique_ptr<VarExpr> varExpr);
+  VarStmt(const std::string& name, std::unique_ptr<VarExpr> varExpr);
 
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
-  virtual void accept(Visitor &visitor) const override;
+  virtual void accept(Visitor& visitor) const override;
 
-  const std::string &getName() const;
+  const std::string& getName() const;
 
-  const VarExpr *getExpr() const;
+  const VarExpr* getExpr() const;
 
 private:
   const std::string mName;

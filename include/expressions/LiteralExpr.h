@@ -8,7 +8,7 @@
 class LiteralExpr : public Expr {
 public:
   LiteralExpr(Value value);
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
   virtual void accept(Visitor& visitor) const override;
 

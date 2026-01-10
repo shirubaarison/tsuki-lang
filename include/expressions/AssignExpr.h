@@ -9,13 +9,13 @@ class AssignExpr : public Expr {
 public:
   AssignExpr(std::unique_ptr<Expr> name, std::unique_ptr<Expr> expr);
 
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
-  virtual void accept(Visitor &visitor) const override;
+  virtual void accept(Visitor& visitor) const override;
 
-  const Expr *getName() const;
+  const Expr* getName() const;
 
-  const Expr *getExpression() const;
+  const Expr* getExpression() const;
 
 private:
   std::unique_ptr<Expr> mName;

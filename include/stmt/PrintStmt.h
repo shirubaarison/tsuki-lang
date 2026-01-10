@@ -8,9 +8,9 @@
 class PrintStmt : public Stmt {
 public:
   PrintStmt(std::unique_ptr<Expr> expr);
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
-  virtual void accept(Visitor &visitor) const override;
+  virtual void accept(Visitor& visitor) const override;
 
   const Expr* getExpr() const;
 

@@ -48,7 +48,7 @@ enum class TokenType {
   TOKEN_EOF
 };
 
-const char *tokenToOperator(TokenType type);
-const char *tokenTypeToString(TokenType type);
+const char* tokenToOperator(TokenType type);
+const char* tokenTypeToString(TokenType type);
 
 #endif // !TOKEN_TYPE_H

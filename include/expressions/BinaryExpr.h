@@ -12,12 +12,12 @@ public:
   BinaryExpr(std::unique_ptr<Expr> left, TokenType operatorType,
              std::unique_ptr<Expr> right);
 
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
   virtual void accept(Visitor& visitor) const override;
 
-  const Expr *getLeft() const;
-  const Expr *getRight() const;
+  const Expr* getLeft() const;
+  const Expr* getRight() const;
   TokenType getOperatorType() const;
 
 private:

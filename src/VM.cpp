@@ -11,7 +11,8 @@
 
 namespace {
 
-bool isTruthy(Value value) {
+bool isTruthy(Value value)
+{
   return std::visit(
     overload{
       [](double x) { return true; },
@@ -23,12 +24,11 @@ bool isTruthy(Value value) {
 }
 
 template <typename T>
-bool isType(const Value& value) {
-  return std::holds_alternative<T>(value);
-}
+bool isType(const Value& value) { return std::holds_alternative<T>(value); }
 
 template <typename Op>
-void binaryCompare(std::vector<Value>& stack, Op op) {
+void binaryCompare(std::vector<Value>& stack, Op op) 
+{
   Value b = stack.back();
   stack.pop_back();
   Value a = stack.back();
@@ -37,7 +37,8 @@ void binaryCompare(std::vector<Value>& stack, Op op) {
   stack.push_back(op(a, b));
 }
 
-void calculate(std::vector<Value>& stack, OpCode op) {
+void calculate(std::vector<Value>& stack, OpCode op) 
+{
   // this is a mess, pls update this
   Value b = stack.back();
   stack.pop_back();
@@ -123,18 +124,14 @@ void calculate(std::vector<Value>& stack, OpCode op) {
 }
 } // namespace
 
-VM::Machine::Machine(const std::vector<Instruction> &bytecode, bool debug)
-: debugMode(debug), code(bytecode) {
-  stack.reserve(1024);
-}
+VM::Machine::Machine(const std::vector<Instruction>& bytecode, bool debug)
+: debugMode(debug), code(bytecode) { stack.reserve(1024); }
 
-VM::Machine::Machine() {
-  stack.reserve(1024);
-}
+VM::Machine::Machine() { stack.reserve(1024); }
 
 void VM::Machine::setDebugMode(bool setDebugMode) { debugMode = setDebugMode; }
 
-void VM::Machine::setByteCode(const std::vector<Instruction>& bytecode) 
+void VM::Machine::setByteCode(const std::vector<Instruction>& bytecode)
 {
   ip = 0;
   code = bytecode;
@@ -143,7 +140,8 @@ void VM::Machine::setByteCode(const std::vector<Instruction>& bytecode)
 InterpretResult VM::Machine::run() {
   for (;;) {
 
-    if (debugMode) {
+    if (debugMode)
+    {
       std::cout << "     ";
       if (stack.empty()) {
         std::cout << "[ ]";
@@ -169,9 +167,10 @@ InterpretResult VM::Machine::run() {
       disassembleInstruction(code[ip], ip);
     }
 
-    const auto &instruction = code[ip++];
+    const auto& instruction = code[ip++];
 
-    switch (instruction.op) {
+    switch (instruction.op) 
+    {
       case OpCode::OP_CONSTANT:
         stack.push_back(instruction.operand);
         break;

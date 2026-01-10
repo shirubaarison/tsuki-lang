@@ -1,6 +1,6 @@
 #include "TokenType.h"
 
-const char *tokenToOperator(TokenType type) {
+const char* tokenToOperator(TokenType type) {
   switch (type) {
   case TokenType::TOKEN_PLUS:
     return "+";
@@ -35,7 +35,7 @@ const char *tokenToOperator(TokenType type) {
   }
 }
 
-const char *tokenTypeToString(TokenType type) {
+const char* tokenTypeToString(TokenType type) {
   switch (type) {
   case TokenType::TOKEN_LEFT_PAREN:
     return "TOKEN_LEFT_PAREN";

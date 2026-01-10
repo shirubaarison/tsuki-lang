@@ -20,22 +20,16 @@ bool isInDebugMode = false;
 VM::Machine vm{};
 
 namespace {
-  template <typename T>
-  void display_type() {
-    std::string func_name(__PRETTY_FUNCTION__);
-    std::string tmp = func_name.substr(func_name.find_first_of("[") + 1);
-    std::string type = "type" + tmp.substr(1, tmp.size() - 2);
-    std::cout << type << std::endl;
-  }
-
-  void run(char *line) {
+  void run(char *line)
+  {
     std::string str(line);
 
     Lexer lexer(str);
 
     std::vector<Token> tokens = lexer.scanTokens();
 
-    if (isInDebugMode) {
+    if (isInDebugMode)
+    {
       for (Token t : tokens) {
         if (t.type != TokenType::TOKEN_EOF) {
           std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
@@ -52,10 +46,10 @@ namespace {
       return;
     }
 
-    if (isInDebugMode) {
-      for (const auto &stmt : syntaxTree)
+    if (isInDebugMode)
+    {
+      for (const auto& stmt : syntaxTree)
       if (stmt) {
-        display_type<decltype(stmt)>();
         stmt->print(std::cout);
         std::cout << std::endl;
       }
@@ -71,32 +65,37 @@ namespace {
       std::cout << std::endl;
     }
 
-    // vm(bytecode, isInDebugMode);
     vm.setByteCode(bytecode);
     vm.run();
   }
 
-  void help(bool man = false) {
+  void help(bool man = false)
+  {
     std::cout << "Tsuki is a dynamically-typed interpreted language that "
                 "compiles source code to bytecode instructions executed by a "
                 "stack-based virtual machine" << std::endl;
-    if (!man) {
+    if (!man)
+    {
       std::cout << "Available commands:\n" << "  - help\n  - quit" << std::endl;
-    } else {
+    }
+    else
+    {
       std::cout << "Available options:\n";
       std::cout << "  -h, --help  \t give this help list" << std::endl;
       std::cout << "  -d, --debug \t print debug information about lexer, parser, compilated code and vm backtrace" << std::endl;
     }
   }
 
-  void repl() {
+  void repl()
+  {
     std::cout << "Tsuki version " << VERSION << "\nType \"help\" for more information.\n";
 
-    char *line;
+    char* line;
 
     using_history();
 
-    for (;;) {
+    for (;;)
+    {
       line = readline(">> ");
 
       if (!line) {
@@ -105,13 +104,18 @@ namespace {
 
       add_history(line);
 
-      if (strcmp(line, "quit") == 0) {
+      if (strcmp(line, "quit") == 0)
+      {
         free(line);
         break;
-      } else if (strcmp(line, "clear") == 0) {
+      }
+      else if (strcmp(line, "clear") == 0)
+      {
         std::cout << "\033[2J";
         continue;
-      } else if (strcmp(line, "help") == 0) {
+      }
+      else if (strcmp(line, "help") == 0)
+      {
         help();
         continue;
       }
@@ -125,17 +129,26 @@ namespace {
   }
 }
 
-int main(int argc, char *argv[]) {
-  if (cmdOptionExists(argv, argv + argc, "--debug") || cmdOptionExists(argv, argv + argc, "-d")) {
+int main(int argc, char* argv[])
+{
+  if (cmdOptionExists(argv, argv + argc, "--debug") || cmdOptionExists(argv, argv + argc, "-d"))
+  {
     isInDebugMode = true;
     vm.setDebugMode(isInDebugMode);
     repl();
-  } else if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h")) {
+  }
+  else if (cmdOptionExists(argv, argv + argc, "--help") || cmdOptionExists(argv, argv + argc, "-h"))
+  {
     help(true);
-  } else {
-    if (argc == 1) {
+  }
+  else
+  {
+    if (argc == 1)
+    {
       repl();
-    } else {
+    }
+    else
+    {
       std::cout << "Usage: " << argv[0] << " [-options] [file_path]" << std::endl;
       help(true);
       exit(64);

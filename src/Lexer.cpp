@@ -1,15 +1,19 @@
 #include "Lexer.h"
 #include "TokenType.h"
 
-static bool isAlpha(char c) {
+namespace {
+bool isAlpha(char c)
+{
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
-static bool isDigit(char c) { return c >= '0' && c <= '9'; }
+bool isDigit(char c) { return c >= '0' && c <= '9'; }
+}
 
-Lexer::Lexer(std::string source) : source(std::move(source)), line(1) {
-  start = this->source.begin();
-  current = this->source.begin();
+Lexer::Lexer(std::string& source) : source(source), line(1) 
+{
+  start = source.begin();
+  current = source.begin();
 
   keywords.emplace("and", TokenType::TOKEN_AND);
   keywords.emplace("class", TokenType::TOKEN_CLASS);
@@ -29,13 +33,15 @@ Lexer::Lexer(std::string source) : source(std::move(source)), line(1) {
   keywords.emplace("while", TokenType::TOKEN_WHILE);
 }
 
-void Lexer::setSource(std::string& source) {
+void Lexer::setSource(std::string& source) 
+{
   this->source = std::move(source);
 }
 
 bool Lexer::isAtEnd() { return current == source.end(); }
 
-Token Lexer::makeToken(TokenType type) {
+Token Lexer::makeToken(TokenType type)
+{
   Token token;
 
   token.type = type;
@@ -45,7 +51,8 @@ Token Lexer::makeToken(TokenType type) {
   return token;
 }
 
-Token Lexer::errorToken(std::string message) {
+Token Lexer::errorToken(std::string message)
+{
   Token token;
   token.type = TokenType::TOKEN_ERROR;
   token.lexeme = message;
@@ -54,7 +61,8 @@ Token Lexer::errorToken(std::string message) {
   return token;
 }
 
-char Lexer::advance() {
+char Lexer::advance()
+{
   if (isAtEnd()) {
     return '\0';
   }
@@ -62,7 +70,8 @@ char Lexer::advance() {
   return *current++;
 }
 
-char Lexer::peek() {
+char Lexer::peek() 
+{
   if (isAtEnd()) {
     return '\0';
   }
@@ -70,7 +79,8 @@ char Lexer::peek() {
   return *current;
 }
 
-char Lexer::peekNext() {
+char Lexer::peekNext()
+{
   if (current + 1 == source.end()) {
     return '\0';
   }
@@ -78,7 +88,8 @@ char Lexer::peekNext() {
   return *(current + 1);
 }
 
-bool Lexer::match(char expected) {
+bool Lexer::match(char expected)
+{
   if (isAtEnd() || *current != expected) {
     return false;
   }
@@ -87,7 +98,8 @@ bool Lexer::match(char expected) {
   return true;
 }
 
-TokenType Lexer::identifierType() {
+TokenType Lexer::identifierType()
+{
   std::string str = std::string(start, current);
 
   auto it = keywords.find(str);
@@ -98,14 +110,16 @@ TokenType Lexer::identifierType() {
   return TokenType::TOKEN_IDENTIFIER;
 }
 
-Token Lexer::identifier() {
+Token Lexer::identifier()
+{
   while (isAlpha(peek()) || isDigit(peek()))
     advance();
 
   return makeToken(identifierType());
 }
 
-Token Lexer::number() {
+Token Lexer::number()
+{
   while (isDigit(peek()))
     advance();
 
@@ -119,7 +133,8 @@ Token Lexer::number() {
   return makeToken(TokenType::TOKEN_NUMBER);
 }
 
-Token Lexer::string() {
+Token Lexer::string()
+{
   while (peek() != '"' && !isAtEnd()) {
     if (peek() == '\n') {
       line++;
@@ -141,7 +156,8 @@ Token Lexer::string() {
   return token;
 }
 
-void Lexer::skipWhitespace() {
+void Lexer::skipWhitespace()
+{
   for (;;) {
     char c = peek();
     switch (c) {
@@ -168,7 +184,8 @@ void Lexer::skipWhitespace() {
   }
 }
 
-Token Lexer::scanToken() {
+Token Lexer::scanToken()
+{
   skipWhitespace();
   start = current;
 
@@ -227,7 +244,8 @@ Token Lexer::scanToken() {
   return errorToken("Caractere inesperado.");
 }
 
-std::vector<Token> Lexer::scanTokens() {
+std::vector<Token> Lexer::scanTokens()
+{
   for (;;) {
     Token token = scanToken();
     tokens.push_back(token);

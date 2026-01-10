@@ -41,8 +41,6 @@ enum class InterpretResult {
   INTERPRET_RUNTIME_ERROR
 };
 
-
-
 namespace VM {
 class Machine {
 private:

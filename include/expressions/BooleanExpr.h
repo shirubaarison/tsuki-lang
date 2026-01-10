@@ -7,7 +7,7 @@
 class BooleanExpr : public Expr {
 public:
   BooleanExpr(Value value);
-  virtual void print(std::ostream &builder) const override;
+  virtual void print(std::ostream& builder) const override;
 
   virtual void accept(Visitor& visitor) const override;
 

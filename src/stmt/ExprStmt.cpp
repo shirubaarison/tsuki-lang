@@ -4,14 +4,13 @@
 
 ExprStmt::ExprStmt(std::unique_ptr<Expr> expr) : mExpr(std::move(expr)) {}
 
-void ExprStmt::print(std::ostream &builder) const {
+void ExprStmt::print(std::ostream& builder) const 
+{
   if (mExpr) {
     mExpr->print(builder);
   }
 }
 
-void ExprStmt::accept(Visitor &visitor) const {
-  visitor.visitExprStmt(this);
-}
+void ExprStmt::accept(Visitor& visitor) const { visitor.visitExprStmt(this); }
 
-const Expr *ExprStmt::getExpr() const { return mExpr.get(); }
+const Expr* ExprStmt::getExpr() const { return mExpr.get(); }

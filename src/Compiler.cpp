@@ -19,7 +19,8 @@
 Compiler::Compiler(std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree)
   : chunk(targetChunk), syntaxTree(std::move(syntaxTree)) {}
 
-void Compiler::compile() {
+void Compiler::compile()
+{
   for (const auto& stmt : syntaxTree) {
     if (stmt) stmt->accept(*this);
   }
@@ -27,23 +28,28 @@ void Compiler::compile() {
   chunk.push_back({OpCode::OP_RETURN, std::monostate{}});
 }
 
-void Compiler::emit(OpCode op) {
+void Compiler::emit(OpCode op)
+{
   chunk.push_back(Instruction{op, Value{}});
 }
 
-void Compiler::emit(OpCode op, const Value& value) {
+void Compiler::emit(OpCode op, const Value& value)
+{
   chunk.push_back(Instruction{op, value});
 }
 
-void Compiler::emitConstant(const Value& value) {
+void Compiler::emitConstant(const Value& value)
+{
   chunk.push_back(Instruction{OpCode::OP_CONSTANT, value});
 }
 
-void Compiler::visitLiteralExpr(const LiteralExpr *expr) {
+void Compiler::visitLiteralExpr(const LiteralExpr* expr)
+{
   emitConstant(expr->getValue());
 }
 
-void Compiler::visitBinaryExpr(const BinaryExpr *expr) {
+void Compiler::visitBinaryExpr(const BinaryExpr* expr)
+{
   expr->getLeft()->accept(*this);
   expr->getRight()->accept(*this);
 
@@ -89,13 +95,15 @@ void Compiler::visitBinaryExpr(const BinaryExpr *expr) {
   }
 }
 
-void Compiler::visitAssignExpr(const AssignExpr *expr) {
+void Compiler::visitAssignExpr(const AssignExpr* expr)
+{
   expr->getExpression()->accept(*this);
   expr->getName()->accept(*this);
   emit(OpCode::OP_DEFINE_GLOBAL);
 }
 
-void Compiler::visitBooleanExpr(const BooleanExpr *expr) {
+void Compiler::visitBooleanExpr(const BooleanExpr* expr)
+{
   if (expr->getValue()) {
     emit(OpCode::OP_TRUE);
   } else {
@@ -103,37 +111,43 @@ void Compiler::visitBooleanExpr(const BooleanExpr *expr) {
   }
 }
 
-void Compiler::visitGroupingExpr(const GroupingExpr *expr) {
+void Compiler::visitGroupingExpr(const GroupingExpr* expr)
+{
   expr->getExpr()->accept(*this);
 }
 
-void Compiler::visitNameExpr(const NameExpr *expr) {
+void Compiler::visitNameExpr(const NameExpr* expr)
+{
   emit(OpCode::OP_GET_GLOBAL, expr->getName());
 }
 
-void Compiler::visitPostfixExpr(const PostfixExpr * /*expr*/) {}
+void Compiler::visitPostfixExpr(const PostfixExpr* /*expr*/) {}
 
-void Compiler::visitPrefixExpr(const PrefixExpr *expr) {}
+void Compiler::visitPrefixExpr(const PrefixExpr* expr) {}
 
-void Compiler::visitVarExpr(const VarExpr *expr) {
+void Compiler::visitVarExpr(const VarExpr* expr)
+{
   expr->getExpression()->accept(*this);
 }
 
-void Compiler::visitPrintStmt(const PrintStmt *stmt) {
+void Compiler::visitPrintStmt(const PrintStmt* stmt)
+{
   stmt->getExpr()->accept(*this);
   emit(OpCode::OP_PRINT);
 }
 
-void Compiler::visitBlockStmt(const BlockStmt * /*stmt*/) {}
+void Compiler::visitBlockStmt(const BlockStmt* /*stmt*/) {}
 
-void Compiler::visitExprStmt(const ExprStmt *stmt) {
+void Compiler::visitExprStmt(const ExprStmt* stmt)
+{
   stmt->getExpr()->accept(*this);
   emit(OpCode::OP_POP);
 }
 
-void Compiler::visitIfStmt(const IfStmt * /*stmt*/) {}
+void Compiler::visitIfStmt(const IfStmt* /*stmt*/) {}
 
-void Compiler::visitVarStmt(const VarStmt *stmt) {
+void Compiler::visitVarStmt(const VarStmt* stmt)
+{
   stmt->getExpr()->accept(*this);
   emit(OpCode::OP_DEFINE_GLOBAL, stmt->getName());
 }
