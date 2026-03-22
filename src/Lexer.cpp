@@ -1,16 +1,14 @@
 #include "Lexer.h"
 #include "TokenType.h"
 
-namespace {
-bool isAlpha(char c)
+namespace
 {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+  bool isAlpha(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'; }
+
+  bool isDigit(char c) { return c >= '0' && c <= '9'; }
 }
 
-bool isDigit(char c) { return c >= '0' && c <= '9'; }
-}
-
-Lexer::Lexer(std::string& source) : source(source), line(1) 
+Lexer::Lexer(std::string& source) : source(source), line(1)
 {
   start = source.begin();
   current = source.begin();
@@ -29,11 +27,10 @@ Lexer::Lexer(std::string& source) : source(source), line(1)
   keywords.emplace("super", TokenType::TOKEN_SUPER);
   keywords.emplace("this", TokenType::TOKEN_THIS);
   keywords.emplace("true", TokenType::TOKEN_TRUE);
-  // keywords.emplace("var", TokenType::TOKEN_VAR);
   keywords.emplace("while", TokenType::TOKEN_WHILE);
 }
 
-void Lexer::setSource(std::string& source) 
+void Lexer::setSource(std::string& source)
 {
   this->source = std::move(source);
 }
@@ -63,36 +60,32 @@ Token Lexer::errorToken(std::string message)
 
 char Lexer::advance()
 {
-  if (isAtEnd()) {
+  if (isAtEnd())
     return '\0';
-  }
 
   return *current++;
 }
 
-char Lexer::peek() 
+char Lexer::peek()
 {
-  if (isAtEnd()) {
+  if (isAtEnd())
     return '\0';
-  }
 
   return *current;
 }
 
 char Lexer::peekNext()
 {
-  if (current + 1 == source.end()) {
+  if (current + 1 == source.end())
     return '\0';
-  }
 
   return *(current + 1);
 }
 
 bool Lexer::match(char expected)
 {
-  if (isAtEnd() || *current != expected) {
+  if (isAtEnd() || *current != expected)
     return false;
-  }
 
   current++;
   return true;
@@ -103,9 +96,8 @@ TokenType Lexer::identifierType()
   std::string str = std::string(start, current);
 
   auto it = keywords.find(str);
-  if (it != keywords.end()) {
+  if (it != keywords.end())
     return it->second; // TokenType
-  }
 
   return TokenType::TOKEN_IDENTIFIER;
 }
@@ -123,7 +115,8 @@ Token Lexer::number()
   while (isDigit(peek()))
     advance();
 
-  if (peek() == '.' && isDigit(peekNext())) {
+  if (peek() == '.' && isDigit(peekNext()))
+  {
     advance();
 
     while (isDigit(peek()))
@@ -135,17 +128,16 @@ Token Lexer::number()
 
 Token Lexer::string()
 {
-  while (peek() != '"' && !isAtEnd()) {
-    if (peek() == '\n') {
+  while (peek() != '"' && !isAtEnd())
+  {
+    if (peek() == '\n')
       line++;
-    }
 
     advance();
   }
 
-  if (isAtEnd()) {
+  if (isAtEnd())
     return errorToken("String não terminada.");
-  }
 
   advance(); // "
 
@@ -153,33 +145,43 @@ Token Lexer::string()
   token.type = TokenType::TOKEN_STRING;
   token.lexeme = std::string(start + 1, current - 1);
   token.line = line;
+
   return token;
 }
 
 void Lexer::skipWhitespace()
 {
-  for (;;) {
+  for (;;)
+  {
     char c = peek();
-    switch (c) {
-    case ' ':
-    case '\r':
-    case '\t':
-      advance();
-      break;
-    case '\n':
-      line++;
-      advance();
-      break;
-    case '/':
-      if (peekNext() == '/') {
-        while (peek() != '\n' && !isAtEnd())
-          advance();
-      } else {
+    switch (c)
+    {
+      case '\r':
+      case '\t':
+      case ' ':
+        advance();
+        break;
+      case '\n':
+        line++;
+        advance();
+        break;
+      case '/':
+        if (peekNext() == '/')
+        {
+          while (!isAtEnd() && peek() != '\n')
+            advance();
+
+          if (!isAtEnd() && peek() == '\n')
+          {
+            line++;
+            advance();
+          }
+        }
+        else
+          return;
+        break;
+      default:
         return;
-      }
-      break;
-    default:
-      return;
     }
   }
 }
@@ -189,56 +191,55 @@ Token Lexer::scanToken()
   skipWhitespace();
   start = current;
 
-  if (isAtEnd()) {
+  if (isAtEnd())
     return makeToken(TokenType::TOKEN_EOF);
-  }
 
   char c = advance();
 
-  if (isAlpha(c)) {
+  if (isAlpha(c))
     return identifier();
-  }
 
   if (isDigit(c))
     return number();
 
-  switch (c) {
-  case '(':
-    return makeToken(TokenType::TOKEN_LEFT_PAREN);
-  case ')':
-    return makeToken(TokenType::TOKEN_RIGHT_PAREN);
-  case '{':
-    return makeToken(TokenType::TOKEN_LEFT_BRACE);
-  case '}':
-    return makeToken(TokenType::TOKEN_RIGHT_BRACE);
-  case ';':
-    return makeToken(TokenType::TOKEN_SEMICOLON);
-  case ',':
-    return makeToken(TokenType::TOKEN_COMMA);
-  case '.':
-    return makeToken(TokenType::TOKEN_DOT);
-  case '-':
-    return makeToken(TokenType::TOKEN_MINUS);
-  case '+':
-    return makeToken(TokenType::TOKEN_PLUS);
-  case '/':
-    return makeToken(TokenType::TOKEN_SLASH);
-  case '*':
-    return makeToken(TokenType::TOKEN_STAR);
-  case '!':
-    return makeToken(match('=') ? TokenType::TOKEN_BANG_EQUAL
-                                : TokenType::TOKEN_BANG);
-  case '=':
-    return makeToken(match('=') ? TokenType::TOKEN_EQUAL_EQUAL
-                                : TokenType::TOKEN_EQUAL);
-  case '<':
-    return makeToken(match('=') ? TokenType::TOKEN_LESS_EQUAL
-                                : TokenType::TOKEN_LESS);
-  case '>':
-    return makeToken(match('=') ? TokenType::TOKEN_GREATER_EQUAL
-                                : TokenType::TOKEN_GREATER);
-  case '"':
-    return string();
+  switch (c)
+  {
+    case '(':
+      return makeToken(TokenType::TOKEN_LEFT_PAREN);
+    case ')':
+      return makeToken(TokenType::TOKEN_RIGHT_PAREN);
+    case '{':
+      return makeToken(TokenType::TOKEN_LEFT_BRACE);
+    case '}':
+      return makeToken(TokenType::TOKEN_RIGHT_BRACE);
+    case ';':
+      return makeToken(TokenType::TOKEN_SEMICOLON);
+    case ',':
+      return makeToken(TokenType::TOKEN_COMMA);
+    case '.':
+      return makeToken(TokenType::TOKEN_DOT);
+    case '-':
+      return makeToken(TokenType::TOKEN_MINUS);
+    case '+':
+      return makeToken(TokenType::TOKEN_PLUS);
+    case '/':
+      return makeToken(TokenType::TOKEN_SLASH);
+    case '*':
+      return makeToken(TokenType::TOKEN_STAR);
+    case '!':
+      return makeToken(match('=') ? TokenType::TOKEN_BANG_EQUAL
+                                  : TokenType::TOKEN_BANG);
+    case '=':
+      return makeToken(match('=') ? TokenType::TOKEN_EQUAL_EQUAL
+                                  : TokenType::TOKEN_EQUAL);
+    case '<':
+      return makeToken(match('=') ? TokenType::TOKEN_LESS_EQUAL
+                                  : TokenType::TOKEN_LESS);
+    case '>':
+      return makeToken(match('=') ? TokenType::TOKEN_GREATER_EQUAL
+                                  : TokenType::TOKEN_GREATER);
+    case '"':
+      return string();
   }
 
   return errorToken("Caractere inesperado.");
@@ -246,12 +247,12 @@ Token Lexer::scanToken()
 
 std::vector<Token> Lexer::scanTokens()
 {
-  for (;;) {
+  for (;;)
+  {
     Token token = scanToken();
     tokens.push_back(token);
-    if (token.type == TokenType::TOKEN_EOF) {
+    if (token.type == TokenType::TOKEN_EOF)
       break;
-    }
   }
   return tokens;
 }
