@@ -167,7 +167,7 @@ std::unique_ptr<Stmt> Parser::block()
   std::vector<std::unique_ptr<Stmt>> statements;
 
   while (!check(TokenType::TOKEN_RIGHT_BRACE)) {
-    statements.push_back(statement());
+    statements.push_back(declaration());
   }
 
   consume(TokenType::TOKEN_RIGHT_BRACE, "Expect '}' after block declaration.");
