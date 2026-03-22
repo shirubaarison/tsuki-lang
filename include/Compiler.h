@@ -13,9 +13,10 @@ private:
   std::vector<Instruction>& chunk;
   std::vector<std::unique_ptr<Stmt>> syntaxTree;
 
-  void emit(OpCode op);
-  void emit(OpCode op, const Value& value);
+  size_t emit(OpCode op);
+  size_t emit(OpCode op, const Value& value);
   void emitConstant(const Value& value);
+  void patchJump(int jumpPos);
 public:
   Compiler(VM::Machine& machine, std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree);
   void compile();

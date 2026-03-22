@@ -15,10 +15,11 @@ void disassembleChunk(const std::vector<Instruction>& code, const char* name)
   }
 }
 
-void disassembleInstruction(const Instruction& instr, size_t offset) 
+void disassembleInstruction(const Instruction& instr, size_t offset)
 {
-  std::cout << std::right << std::setw(4) << std::setfill('0') << offset << " ";
-  switch (instr.op) {
+  std::cout << std::right << std::setw(4) << std::setfill('0') << offset << "   | ";
+  switch (instr.op)
+  {
     case OpCode::OP_CONSTANT:
       std::cout << std::setw(16) << std::setfill(' ') << std::left
         << "OP_CONSTANT";
@@ -103,27 +104,35 @@ void disassembleInstruction(const Instruction& instr, size_t offset)
       break;
 
     case OpCode::OP_DEFINE_GLOBAL:
-      std::cout << "OP_DEFINE_GLOBAL\n";
+      std::cout << "OP_DEFINE_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
     case OpCode::OP_GET_GLOBAL:
-      std::cout << "OP_GET_GLOBAL\n";
+      std::cout << "OP_GET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
     case OpCode::OP_SET_GLOBAL:
-      std::cout << "OP_SET_GLOBAL\n";
+      std::cout << "OP_SET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
     case OpCode::OP_DEFINE_LOCAL:
-      std::cout << "OP_DEFINE_LOCAL\n";
+      std::cout << "OP_DEFINE_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
     case OpCode::OP_GET_LOCAL:
-      std::cout << "OP_GET_LOCAL\n";
+      std::cout << "OP_GET_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
     case OpCode::OP_SET_LOCAL:
       std::cout << "OP_SET_LOCAL\n";
+      break;
+
+    case OpCode::OP_JUMP_IF_FALSE:
+      std::cout << "OP_JUMP_IF_FALSE " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
+      break;
+
+    case OpCode::OP_JUMP:
+      std::cout << "OP_JUMP " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
       break;
   }
 }

@@ -18,7 +18,9 @@
 #include "stmt/VarStmt.h"
 #include "stmt/PrintStmt.h"
 #include "stmt/BlockStmt.h"
+#include "stmt/IfStmt.h"
 
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -35,14 +37,16 @@ void Compiler::compile()
   chunk.push_back({OpCode::OP_RETURN, std::monostate{}});
 }
 
-void Compiler::emit(OpCode op)
+size_t Compiler::emit(OpCode op)
 {
   chunk.push_back(Instruction{op, Value{}});
+  return chunk.size() - 1;
 }
 
-void Compiler::emit(OpCode op, const Value& value)
+size_t Compiler::emit(OpCode op, const Value& value)
 {
   chunk.push_back(Instruction{op, value});
+  return chunk.size() - 1;
 }
 
 void Compiler::emitConstant(const Value& value)
@@ -91,9 +95,10 @@ void Compiler::visitBinaryExpr(const BinaryExpr* expr)
   case TokenType::TOKEN_LESS_EQUAL:
     emit(OpCode::OP_LESS_EQUAL);
     break;
-  case TokenType::TOKEN_AND:
+  case TokenType::TOKEN_AND: {
     emit(OpCode::OP_AND);
     break;
+  }
   case TokenType::TOKEN_OR:
     emit(OpCode::OP_OR);
     break;
@@ -132,9 +137,9 @@ void Compiler::visitNameExpr(const NameExpr* expr)
   }
 }
 
-void Compiler::visitPostfixExpr(const PostfixExpr* /*expr*/) {}
+void Compiler::visitPostfixExpr(const PostfixExpr*) {}
 
-void Compiler::visitPrefixExpr(const PrefixExpr* expr) {}
+void Compiler::visitPrefixExpr(const PrefixExpr*) {}
 
 void Compiler::visitVarExpr(const VarExpr* expr)
 {
@@ -165,7 +170,32 @@ void Compiler::visitExprStmt(const ExprStmt* stmt)
   emit(OpCode::OP_POP);
 }
 
-void Compiler::visitIfStmt(const IfStmt* /*stmt*/) {}
+void Compiler::patchJump(int jumpPos)
+{
+  int offset = static_cast<int>(chunk.size() - 1 - jumpPos);
+  chunk[jumpPos].operand = offset;
+}
+
+void Compiler::visitIfStmt(const IfStmt* stmt)
+{
+  stmt->getCondition()->accept(*this);
+
+  std::size_t jumpToElse = emit(OpCode::OP_JUMP_IF_FALSE);
+  stmt->getThen()->accept(*this);
+
+  size_t jumpOverElse = 0;
+  if (stmt->getElse())
+    jumpOverElse = emit(OpCode::OP_JUMP);
+
+  patchJump(jumpToElse);
+
+  if (stmt->getElse()) {
+    stmt->getElse()->accept(*this);
+    patchJump(jumpOverElse);
+  }
+
+  emit(OpCode::OP_POP);
+}
 
 void Compiler::visitVarStmt(const VarStmt* stmt)
 {

@@ -14,9 +14,9 @@ bool isTruthy(Value value)
 {
   return std::visit(
     overload{
-      [](double _) { return true; },
-      [](int _) { return true; },
-      [](const std::string &_) { return true; },
+      [](double) { return true; },
+      [](int) { return true; },
+      [](const std::string&) { return true; },
       [](bool x) { return x; },
       [](std::monostate) { return false; }},
     value);
@@ -98,7 +98,7 @@ InterpretResult VM::Machine::run() {
 
     if (debugMode)
     {
-      std::cout << "     stack ";
+      std::cout << "       stack ";
       if (stack.empty()) {
         std::cout << "[ ]";
       }
@@ -108,7 +108,7 @@ InterpretResult VM::Machine::run() {
         std::cout << " ]";
       }
       std::cout << std::endl;
-      std::cout << "     globals ";
+      std::cout << "       globals ";
       if (globals.empty()) {
         std::cout << "[ ]";
       }
@@ -277,6 +277,23 @@ InterpretResult VM::Machine::run() {
         stack.pop_back();
 
         locals[scopeDepth][std::get<std::string>(instruction.operand)] = var;
+        break;
+      }
+
+      case OpCode::OP_JUMP_IF_FALSE: {
+        Value var { stack.back() };
+
+        if (!isTruthy(var)) {
+          int offset = std::get<int>(instruction.operand);
+          ip += offset;
+        }
+
+        break;
+      }
+
+      case OpCode::OP_JUMP: {
+        int offset = std::get<int>(instruction.operand);
+        ip += offset;
         break;
       }
 
