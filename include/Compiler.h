@@ -18,7 +18,6 @@ private:
   void emitConstant(const Value& value);
 public:
   Compiler(VM::Machine& machine, std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree);
-  Compiler();
   void compile();
 
   void setTargetChunk(std::vector<Instruction>& targetChunk);

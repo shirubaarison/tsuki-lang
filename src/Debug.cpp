@@ -113,5 +113,17 @@ void disassembleInstruction(const Instruction& instr, size_t offset)
     case OpCode::OP_SET_GLOBAL:
       std::cout << "OP_SET_GLOBAL\n";
       break;
+
+    case OpCode::OP_DEFINE_LOCAL:
+      std::cout << "OP_DEFINE_LOCAL\n";
+      break;
+
+    case OpCode::OP_GET_LOCAL:
+      std::cout << "OP_GET_LOCAL\n";
+      break;
+
+    case OpCode::OP_SET_LOCAL:
+      std::cout << "OP_SET_LOCAL\n";
+      break;
   }
 }

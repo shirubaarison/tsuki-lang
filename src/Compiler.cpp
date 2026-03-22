@@ -4,6 +4,7 @@
 #include "VM/VM.h"
 #include "Value.h"
 #include "Visitor.h"
+
 #include "expressions/BinaryExpr.h"
 #include "expressions/BooleanExpr.h"
 #include "expressions/GroupingExpr.h"
@@ -12,10 +13,14 @@
 #include "expressions/AssignExpr.h"
 #include "expressions/VarExpr.h"
 #include "expressions/NameExpr.h"
+
 #include "stmt/ExprStmt.h"
 #include "stmt/VarStmt.h"
 #include "stmt/PrintStmt.h"
+#include "stmt/BlockStmt.h"
+
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 Compiler::Compiler(VM::Machine& machine, std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree)
@@ -120,7 +125,11 @@ void Compiler::visitGroupingExpr(const GroupingExpr* expr)
 
 void Compiler::visitNameExpr(const NameExpr* expr)
 {
-  emit(OpCode::OP_GET_GLOBAL, expr->getName());
+  if (machine.getScopeDepth() == 0) {
+    emit(OpCode::OP_GET_GLOBAL, expr->getName());
+  } else {
+    emit(OpCode::OP_GET_LOCAL, expr->getName());
+  }
 }
 
 void Compiler::visitPostfixExpr(const PostfixExpr* /*expr*/) {}
@@ -138,7 +147,17 @@ void Compiler::visitPrintStmt(const PrintStmt* stmt)
   emit(OpCode::OP_PRINT);
 }
 
-void Compiler::visitBlockStmt(const BlockStmt* /*stmt*/) {}
+void Compiler::visitBlockStmt(const BlockStmt* stmt)
+{
+  machine.incrementScopeDepth();
+
+  auto& statements = stmt->getStatements();
+  for (auto& st : statements) {
+    st->accept(*this);
+  }
+
+  machine.decrementScopeDepth();
+}
 
 void Compiler::visitExprStmt(const ExprStmt* stmt)
 {
@@ -153,9 +172,21 @@ void Compiler::visitVarStmt(const VarStmt* stmt)
   stmt->getExpr()->accept(*this);
 
   const std::string& name = stmt->getName();
-  if (machine.globalExist(name)) {
-    emit(OpCode::OP_SET_GLOBAL, name);
-  } else {
-    emit(OpCode::OP_DEFINE_GLOBAL, stmt->getName());
+  if (machine.getScopeDepth() == 0)
+  {
+    if (machine.globalExist(name)) {
+      emit(OpCode::OP_SET_GLOBAL, name);
+    } else {
+      emit(OpCode::OP_DEFINE_GLOBAL, stmt->getName());
+    }
+  }
+  else
+  {
+    try {
+      machine.getSymbol(name);
+      emit(OpCode::OP_SET_LOCAL, name);
+    } catch (std::runtime_error& _) {
+      emit(OpCode::OP_DEFINE_LOCAL, stmt->getName());
+    }
   }
 }

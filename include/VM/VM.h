@@ -28,7 +28,10 @@ enum OpCode {
   OP_OR,
   OP_DEFINE_GLOBAL,
   OP_GET_GLOBAL,
-  OP_SET_GLOBAL
+  OP_SET_GLOBAL,
+  OP_DEFINE_LOCAL,
+  OP_GET_LOCAL,
+  OP_SET_LOCAL
 };
 
 struct Instruction {
@@ -52,6 +55,9 @@ private:
   std::vector<Value> stack;
   std::map<std::string, Value> globals;
 
+  int scopeDepth;
+  std::map<int, std::map<std::string, Value>> locals;
+
 public:
   Machine(const std::vector<Instruction>& bytecode, bool debug = false);
   Machine();
@@ -61,6 +67,11 @@ public:
   void setByteCode(const std::vector<Instruction>& bytecode);
 
   bool globalExist(const std::string& name) const;
+  Value getSymbol(const std::string& name) const;
+
+  int getScopeDepth() const;
+  void incrementScopeDepth();
+  void decrementScopeDepth();
 };
 
 } // namespace VM
