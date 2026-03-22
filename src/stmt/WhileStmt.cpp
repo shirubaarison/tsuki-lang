@@ -7,10 +7,11 @@ WhileStmt::WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> stat
 
 void WhileStmt::print(std::ostream& builder) const
 {
-  builder << "while (";
+  builder << "WhileStmt(";
   mCondition->print(builder);
-  builder << ")\n";
+  builder << ") {";
   mStatement->print(builder);
+  builder << "}";
 }
 
 void WhileStmt::accept(Visitor& visitor) const { visitor.visitWhileStmt(this); }

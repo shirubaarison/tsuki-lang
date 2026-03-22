@@ -7,7 +7,9 @@ VarExpr::VarExpr(const std::string& name, std::unique_ptr<Expr> rhs)
 
 void VarExpr::print(std::ostream& builder) const
 {
+  builder << "VarExpr(";
   rhs->print(builder);
+  builder << ")";
 }
 
 void VarExpr::accept(Visitor& visitor) const { visitor.visitVarExpr(this); }

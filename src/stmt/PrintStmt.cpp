@@ -6,9 +6,9 @@ PrintStmt::PrintStmt(std::unique_ptr<Expr> expr) : mExpr(std::move(expr)) {}
 
 void PrintStmt::print(std::ostream& builder) const
 {
-  builder << "print ";
+  builder << "PrintStmt(";
   mExpr->print(builder);
-  builder << ";\n";
+  builder << ")\n";
 }
 
 void PrintStmt::accept(Visitor& visitor) const { visitor.visitPrintStmt(this); }

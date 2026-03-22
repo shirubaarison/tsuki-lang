@@ -7,8 +7,10 @@ PrefixExpr::PrefixExpr(TokenType op, std::unique_ptr<Expr> expr)
 
 void PrefixExpr::print(std::ostream& builder) const
 {
+  builder << "PrefixExpr(";
   builder << tokenToOperator(mOp);
   mExpr->print(builder);
+  builder << ")";
 }
 
 void PrefixExpr::accept(Visitor& visitor) const { visitor.visitPrefixExpr(this); }

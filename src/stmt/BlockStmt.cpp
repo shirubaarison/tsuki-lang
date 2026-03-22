@@ -7,11 +7,11 @@ BlockStmt::BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
 
 void BlockStmt::print(std::ostream& builder) const
 {
-  builder << "{\n";
+  builder << "blockStmt(";
   for (const auto &stmt : mStatements) {
     stmt->print(builder);
   }
-  builder << "}\n";
+  builder << ")";
 }
 
 void BlockStmt::accept(Visitor& visitor) const { visitor.visitBlockStmt(this); }

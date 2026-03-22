@@ -6,9 +6,10 @@ GroupingExpr::GroupingExpr(std::unique_ptr<Expr> expr) : mExpr(std::move(expr)) 
 
 void GroupingExpr::print(std::ostream& builder) const 
 {
-  builder << "(";
+  builder << "GroupingExpr(";
   mExpr->print(builder);
   builder << ")";
+
 }
 
 void GroupingExpr::accept(Visitor& visitor) const { visitor.visitGroupingExpr(this); }

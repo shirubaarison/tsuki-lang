@@ -9,13 +9,16 @@ IfStmt::IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch
 
 void IfStmt::print(std::ostream& builder) const
 {
-  builder << "if (";
+  builder << "ifStmt(";
   mCondition->print(builder);
   builder << ")\n";
+  builder << "{";
   mThenBranch->print(builder);
+  builder << "}";
   if (mElseBranch) {
-    builder << "else\n";
+    builder << "elseBranch(\n";
     mElseBranch->print(builder);
+    builder << ")";
   }
 }
 

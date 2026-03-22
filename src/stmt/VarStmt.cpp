@@ -7,12 +7,13 @@ VarStmt::VarStmt(const std::string& name, std::unique_ptr<VarExpr> varExpr)
 
 void VarStmt::print(std::ostream& builder) const
 {
+  builder << "VarStmt(";
   builder << mName;
   if (mExpr) {
     builder << " = ";
     mExpr->print(builder);
   }
-  builder << ";\n";
+  builder << ")";
 }
 
 void VarStmt::accept(Visitor& visitor) const { visitor.visitVarStmt(this); }

@@ -8,9 +8,11 @@ BinaryExpr::BinaryExpr(std::unique_ptr<Expr> left, TokenType op,
 
 void BinaryExpr::print(std::ostream& builder) const 
 {
+  builder << "BinaryExpr(";
   mLeft->print(builder);
   builder << " " << tokenToOperator(mOperator) << " ";
   mRight->print(builder);
+  builder << ")";
 }
 
 void BinaryExpr::accept(Visitor& visitor) const { visitor.visitBinaryExpr(this); }

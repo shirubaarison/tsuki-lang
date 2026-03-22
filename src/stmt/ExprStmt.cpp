@@ -7,7 +7,9 @@ ExprStmt::ExprStmt(std::unique_ptr<Expr> expr) : mExpr(std::move(expr)) {}
 void ExprStmt::print(std::ostream& builder) const 
 {
   if (mExpr) {
+    builder << "ExprStmt(";
     mExpr->print(builder);
+    builder << ")";
   }
 }
 
