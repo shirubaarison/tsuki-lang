@@ -234,13 +234,15 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence)
   return lhs;
 }
 
-std::unique_ptr<Expr> Parser::parseLhs(bool canAssign, std::unique_ptr<Expr> lhs, TokenType op, std::unique_ptr<Expr> rhs) {
+std::unique_ptr<Expr> Parser::parseLhs(bool canAssign, std::unique_ptr<Expr> lhs, TokenType op, std::unique_ptr<Expr> rhs)
+{
   if (canAssign && op == TokenType::TOKEN_EQUAL)
   {
-    if (dynamic_cast<const LiteralExpr*>(lhs.get()) == nullptr) {
-      return nullptr;
+    if (auto var = dynamic_cast<const VarExpr*>(lhs.get())) {
+      return std::make_unique<AssignExpr>(var->getName(), std::move(rhs));
     }
-    return std::make_unique<AssignExpr>(std::move(lhs), std::move(rhs));
+
+    return nullptr;
   }
 
   return std::make_unique<BinaryExpr>(std::move(lhs), op, std::move(rhs));

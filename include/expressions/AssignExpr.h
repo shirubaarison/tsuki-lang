@@ -7,18 +7,18 @@
 
 class AssignExpr : public Expr {
 public:
-  AssignExpr(std::unique_ptr<Expr> name, std::unique_ptr<Expr> expr);
+  AssignExpr(std::string name, std::unique_ptr<Expr> expr);
 
   virtual void print(std::ostream& builder) const override;
 
   virtual void accept(Visitor& visitor) const override;
 
-  const Expr* getName() const;
+  const std::string& getName() const;
 
-  const Expr* getExpression() const;
+  const Expr *getExpression() const;
 
 private:
-  std::unique_ptr<Expr> mName;
+  std::string& m_name;
   std::unique_ptr<Expr> mExpr;
 };
 
