@@ -95,14 +95,6 @@ void disassembleInstruction(const Instruction& instr, size_t offset)
       std::cout << "OP_NIL\n";
       break;
 
-    case OpCode::OP_AND:
-      std::cout << "OP_AND\n";
-      break;
-
-    case OpCode::OP_OR:
-      std::cout << "OP_OR\n";
-      break;
-
     case OpCode::OP_DEFINE_GLOBAL:
       std::cout << "OP_DEFINE_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
       break;

@@ -192,37 +192,6 @@ InterpretResult VM::Machine::run() {
         binaryCompare(stack, [](Value a, Value b){ return a > b; });
         break;
 
-      case OpCode::OP_AND: {
-        Value b = stack.back();
-        stack.pop_back();
-        Value a = stack.back();
-        stack.pop_back();
-
-        if (!isTruthy(a)) {
-          stack.push_back(false);
-        } else {
-          stack.push_back(isTruthy(b));
-        }
-
-        break;
-      }
-
-      case OpCode::OP_OR: {
-        Value b = stack.back();
-        stack.pop_back();
-
-        Value a = stack.back();
-        stack.pop_back();
-
-        if (isTruthy(a)) {
-          stack.push_back(true);
-        } else {
-          stack.push_back(isTruthy(b));
-        }
-
-        break;
-      }
-
       case OpCode::OP_DEFINE_GLOBAL: {
         Value var { stack.back() };
         stack.pop_back();

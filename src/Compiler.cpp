@@ -61,49 +61,48 @@ void Compiler::visitLiteralExpr(const LiteralExpr* expr)
 
 void Compiler::visitBinaryExpr(const BinaryExpr* expr)
 {
+  if (expr->getOperatorType() == TokenType::TOKEN_AND) {
+    expr->getLeft()->accept(*this);
+
+    int endJump = emit(OpCode::OP_JUMP_IF_FALSE);
+    emit(OpCode::OP_POP);
+
+    expr->getRight()->accept(*this);
+
+    patchJump(endJump);
+    return;
+  }
+
+  if (expr->getOperatorType() == TokenType::TOKEN_OR) {
+    expr->getLeft()->accept(*this);
+
+    int elseJump = emit(OpCode::OP_JUMP_IF_FALSE);
+    int endJump  = emit(OpCode::OP_JUMP);
+
+    patchJump(elseJump);
+    emit(OpCode::OP_POP);
+
+    expr->getRight()->accept(*this);
+
+    patchJump(endJump);
+    return;
+  }
+
   expr->getLeft()->accept(*this);
   expr->getRight()->accept(*this);
 
   switch (expr->getOperatorType()) {
-  case TokenType::TOKEN_PLUS:
-    emit(OpCode::OP_ADD);
-    break;
-  case TokenType::TOKEN_MINUS:
-    emit(OpCode::OP_SUB);
-    break;
-  case TokenType::TOKEN_STAR:
-    emit(OpCode::OP_MUL);
-    break;
-  case TokenType::TOKEN_SLASH:
-    emit(OpCode::OP_DIV);
-    break;
-  case TokenType::TOKEN_GREATER:
-    emit(OpCode::OP_GREATER);
-    break;
-  case TokenType::TOKEN_GREATER_EQUAL:
-    emit(OpCode::OP_GREATER_EQUAL);
-    break;
-  case TokenType::TOKEN_EQUAL_EQUAL:
-    emit(OpCode::OP_EQUAL);
-    break;
-  case TokenType::TOKEN_BANG_EQUAL:
-    emit(OpCode::OP_NOT_EQUAL);
-    break;
-  case TokenType::TOKEN_LESS:
-    emit(OpCode::OP_LESS);
-    break;
-  case TokenType::TOKEN_LESS_EQUAL:
-    emit(OpCode::OP_LESS_EQUAL);
-    break;
-  case TokenType::TOKEN_AND: {
-    emit(OpCode::OP_AND);
-    break;
-  }
-  case TokenType::TOKEN_OR:
-    emit(OpCode::OP_OR);
-    break;
-  default:
-    break;
+    case TokenType::TOKEN_PLUS:          emit(OpCode::OP_ADD); break;
+    case TokenType::TOKEN_MINUS:         emit(OpCode::OP_SUB); break;
+    case TokenType::TOKEN_STAR:          emit(OpCode::OP_MUL); break;
+    case TokenType::TOKEN_SLASH:         emit(OpCode::OP_DIV); break;
+    case TokenType::TOKEN_GREATER:       emit(OpCode::OP_GREATER); break;
+    case TokenType::TOKEN_GREATER_EQUAL: emit(OpCode::OP_GREATER_EQUAL); break;
+    case TokenType::TOKEN_EQUAL_EQUAL:   emit(OpCode::OP_EQUAL); break;
+    case TokenType::TOKEN_BANG_EQUAL:    emit(OpCode::OP_NOT_EQUAL); break;
+    case TokenType::TOKEN_LESS:          emit(OpCode::OP_LESS); break;
+    case TokenType::TOKEN_LESS_EQUAL:    emit(OpCode::OP_LESS_EQUAL); break;
+    default: break;
   }
 }
 
