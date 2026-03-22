@@ -39,6 +39,7 @@ public:
   void visitExprStmt(const ExprStmt* stmt)override;
   void visitIfStmt(const IfStmt* stmt)override;
   void visitVarStmt(const VarStmt* stmt)override;
+  void visitWhileStmt(const WhileStmt* stmt)override;
 };
 
 #endif // !COMPILER_H

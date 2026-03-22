@@ -19,6 +19,7 @@
 #include "stmt/PrintStmt.h"
 #include "stmt/BlockStmt.h"
 #include "stmt/IfStmt.h"
+#include "stmt/WhileStmt.h"
 
 #include <cstddef>
 #include <memory>
@@ -192,6 +193,24 @@ void Compiler::visitIfStmt(const IfStmt* stmt)
     stmt->getElse()->accept(*this);
     patchJump(jumpOverElse);
   }
+
+  emit(OpCode::OP_POP);
+}
+
+void Compiler::visitWhileStmt(const WhileStmt* stmt)
+{
+  int loopStart = chunk.size();
+  stmt->getCondition()->accept(*this);
+
+  std::size_t exitJump = emit(OpCode::OP_JUMP_IF_FALSE);
+  emit(OpCode::OP_POP);
+
+  stmt->getStatement()->accept(*this);
+
+  int offset = chunk.size() - loopStart + 1;
+  emit(OpCode::OP_LOOP, offset);
+
+  patchJump(exitJump);
 
   emit(OpCode::OP_POP);
 }

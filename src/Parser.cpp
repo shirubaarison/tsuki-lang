@@ -14,6 +14,7 @@
 #include "stmt/PrintStmt.h"
 #include "stmt/IfStmt.h"
 #include "stmt/BlockStmt.h"
+#include "stmt/WhileStmt.h"
 
 #include "expressions/BinaryExpr.h"
 #include "expressions/AssignExpr.h"
@@ -126,6 +127,8 @@ std::unique_ptr<Stmt> Parser::statement()
     return printStatement();
   } else if (match(TokenType::TOKEN_IF)) {
     return ifStatement();
+  } else if (match(TokenType::TOKEN_WHILE)) {
+    return whileStatement();
   } else if (match(TokenType::TOKEN_LEFT_BRACE)){
     return block();
   } else {
@@ -160,6 +163,19 @@ std::unique_ptr<Stmt> Parser::ifStatement()
   }
 
   return std::make_unique<IfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
+}
+
+std::unique_ptr<Stmt> Parser::whileStatement()
+{
+  consume(TokenType::TOKEN_LEFT_PAREN, "Exepct '(' after 'while'.");
+
+  std::unique_ptr<Expr> condition = expression();
+
+  consume(TokenType::TOKEN_RIGHT_PAREN, "Exepct ')' after condition.");
+
+  std::unique_ptr<Stmt> whileStatament = statement();
+
+  return std::make_unique<WhileStmt>(std::move(condition), std::move(whileStatament));
 }
 
 std::unique_ptr<Stmt> Parser::block()

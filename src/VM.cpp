@@ -266,6 +266,12 @@ InterpretResult VM::Machine::run() {
         break;
       }
 
+      case OpCode::OP_LOOP: {
+        int offset = std::get<int>(instruction.operand);
+        ip -= offset;
+        break;
+      }
+
       case OpCode::OP_RETURN:
         return InterpretResult::INTERPRET_OK;
 

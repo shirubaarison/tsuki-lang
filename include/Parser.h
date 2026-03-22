@@ -60,6 +60,7 @@ private:
   std::unique_ptr<Stmt> expressionStatement();
   std::unique_ptr<Stmt> printStatement();
   std::unique_ptr<Stmt> ifStatement();
+  std::unique_ptr<Stmt> whileStatement();
 
   std::unique_ptr<Expr> parsePrecedence(Precedence precedence);
 

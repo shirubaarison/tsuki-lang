@@ -16,6 +16,7 @@ class BlockStmt;
 class ExprStmt;
 class IfStmt;
 class VarStmt;
+class WhileStmt;
 
 class Visitor {
 public:
@@ -34,6 +35,7 @@ public:
   virtual void visitExprStmt(const ExprStmt* stmt)          = 0;
   virtual void visitIfStmt(const IfStmt* stmt)              = 0;
   virtual void visitVarStmt(const VarStmt* stmt)            = 0;
+  virtual void visitWhileStmt(const WhileStmt* stmt)        = 0;
 };
 
 #endif // !VISITOR_CLASS_H

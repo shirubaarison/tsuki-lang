@@ -126,5 +126,9 @@ void disassembleInstruction(const Instruction& instr, size_t offset)
     case OpCode::OP_JUMP:
       std::cout << "OP_JUMP " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
       break;
+
+    case OpCode::OP_LOOP:
+      std::cout << "OP_LOOP\n";
+      break;
   }
 }
