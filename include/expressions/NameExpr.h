@@ -6,7 +6,7 @@
 
 class NameExpr : public Expr {
 public:
-  NameExpr(const std::string& name);
+  NameExpr(std::string name);
 
   virtual void print(std::ostream& builder) const override;
 
@@ -15,7 +15,7 @@ public:
   const std::string& getName() const;
 
 private:
-  const std::string mName;
+  const std::string m_name;
 };
 
 #endif // !NAME_EXPR_H

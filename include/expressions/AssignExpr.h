@@ -18,8 +18,8 @@ public:
   const Expr *getExpression() const;
 
 private:
-  std::string& m_name;
-  std::unique_ptr<Expr> mExpr;
+  std::string m_name;
+  std::unique_ptr<Expr> m_expr;
 };
 
 #endif // !ASSIGN_EXPR_H
