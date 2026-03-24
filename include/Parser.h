@@ -53,8 +53,6 @@ private:
   void error(Token token, const std::string& message);
 
   std::unique_ptr<Stmt> declaration();
-  std::unique_ptr<Stmt> varDeclaration();
-
   std::unique_ptr<Stmt> statement();
   std::unique_ptr<Stmt> block();
   std::unique_ptr<Stmt> expressionStatement();
@@ -75,13 +73,13 @@ private:
 
 class ParserError : public std::exception {
 public:
-  ParserError(Token token, const char* m);
+  ParserError(Token token, std::string m);
   const char* what() const noexcept override;
   const Token getToken() const;
 
 private:
   Token mToken;
-  const char* msg;
+  std::string msg;
 };
 
 #endif // !PARSER_H

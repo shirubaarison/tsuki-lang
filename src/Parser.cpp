@@ -9,7 +9,6 @@
 #include "TokenType.h"
 
 #include "Value.h"
-#include "stmt/VarStmt.h"
 #include "stmt/ExprStmt.h"
 #include "stmt/PrintStmt.h"
 #include "stmt/IfStmt.h"
@@ -27,45 +26,49 @@
 #include "expressions/VarExpr.h"
 
 namespace {
-inline Parser::Precedence getPrecedence(Token op) 
-{
-  switch (op.type) {
-    case TokenType::TOKEN_EQUAL_EQUAL:
-    case TokenType::TOKEN_BANG_EQUAL:
-      return Parser::Precedence::PREC_EQUALITY;
+  inline Parser::Precedence getPrecedence(Token op)
+  {
+    switch (op.type)
+    {
+      case TokenType::TOKEN_EQUAL:
+        return Parser::Precedence::PREC_ASSIGNMENT;
 
-    case TokenType::TOKEN_GREATER:
-    case TokenType::TOKEN_GREATER_EQUAL:
-    case TokenType::TOKEN_LESS:
-    case TokenType::TOKEN_LESS_EQUAL:
-      return Parser::Precedence::PREC_COMPARISON;
+      case TokenType::TOKEN_EQUAL_EQUAL:
+      case TokenType::TOKEN_BANG_EQUAL:
+        return Parser::Precedence::PREC_EQUALITY;
 
-    case TokenType::TOKEN_PLUS:
-    case TokenType::TOKEN_MINUS:
-      return Parser::Precedence::PREC_TERM;
+      case TokenType::TOKEN_GREATER:
+      case TokenType::TOKEN_GREATER_EQUAL:
+      case TokenType::TOKEN_LESS:
+      case TokenType::TOKEN_LESS_EQUAL:
+        return Parser::Precedence::PREC_COMPARISON;
 
-    case TokenType::TOKEN_STAR:
-    case TokenType::TOKEN_SLASH:
-      return Parser::Precedence::PREC_FACTOR;
+      case TokenType::TOKEN_PLUS:
+      case TokenType::TOKEN_MINUS:
+        return Parser::Precedence::PREC_TERM;
 
-    case TokenType::TOKEN_AND:
-      return Parser::Precedence::PREC_AND;
+      case TokenType::TOKEN_STAR:
+      case TokenType::TOKEN_SLASH:
+        return Parser::Precedence::PREC_FACTOR;
 
-    case TokenType::TOKEN_OR:
-      return Parser::Precedence::PREC_OR;
+      case TokenType::TOKEN_AND:
+        return Parser::Precedence::PREC_AND;
 
-    default:
-      return Parser::Precedence::PREC_NONE;
+      case TokenType::TOKEN_OR:
+        return Parser::Precedence::PREC_OR;
+
+      default:
+        return Parser::Precedence::PREC_NONE;
+    }
   }
-}
 }
 
 Parser::Parser(std::vector<Token> tokens)
     : tokens(tokens), hadError(false), panicMode(false), currentIndex(0) {}
 
-ParserError::ParserError(Token token, const char *m) : mToken(token), msg(m) {}
+ParserError::ParserError(Token token, std::string m) : mToken(token), msg(std::move(m)) {}
 
-const char *ParserError::what() const noexcept { return msg; }
+const char *ParserError::what() const noexcept { return msg.c_str(); }
 
 const Token ParserError::getToken() const { return mToken; }
 
@@ -88,10 +91,6 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 std::unique_ptr<Stmt> Parser::declaration()
 {
   try {
-      if (peekAhead().type == TokenType::TOKEN_EQUAL) {
-        return varDeclaration();
-      }
-
       return statement();
   } catch (const ParserError &parserError) {
     error(parserError.getToken(), parserError.what());
@@ -102,23 +101,6 @@ std::unique_ptr<Stmt> Parser::declaration()
 
     return nullptr;
   }
-}
-
-std::unique_ptr<Stmt> Parser::varDeclaration()
-{
-  consume(TokenType::TOKEN_IDENTIFIER, "Expect variable name.");
-  std::string varName = current.lexeme;
-
-  std::unique_ptr<Expr> rhs = nullptr;
-  if (match(TokenType::TOKEN_EQUAL)) {
-    rhs = expression();
-  }
-
-  consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
-
-  std::unique_ptr<VarExpr> varExpr = std::make_unique<VarExpr>(varName, std::move(rhs));
-
-  return std::make_unique<VarStmt>(varName, std::move(varExpr));
 }
 
 std::unique_ptr<Stmt> Parser::statement()
@@ -214,7 +196,8 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence)
     return nullptr;
   }
 
-  while (precedence <= getPrecedence(peek())) 
+  // while (precedence <= getPrecedence(peek()))
+  while (precedence <= getPrecedence(peek()) && getPrecedence(peek()) != Precedence::PREC_NONE)
   {
     Token op = peek();
     advance();
@@ -236,15 +219,16 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence)
 
 std::unique_ptr<Expr> Parser::parseLhs(bool canAssign, std::unique_ptr<Expr> lhs, TokenType op, std::unique_ptr<Expr> rhs)
 {
-  if (canAssign && op == TokenType::TOKEN_EQUAL)
+  if (op == TokenType::TOKEN_EQUAL)
   {
-    if (auto var = dynamic_cast<const VarExpr*>(lhs.get())) {
+    if (!canAssign)
+      throw ParserError(previous, "Invalid assignment target.");
+
+    if (auto var = dynamic_cast<const NameExpr*>(lhs.get()))
       return std::make_unique<AssignExpr>(var->getName(), std::move(rhs));
-    }
 
-    return nullptr;
+    throw ParserError(previous, "Invalid assignment target.");
   }
-
   return std::make_unique<BinaryExpr>(std::move(lhs), op, std::move(rhs));
 }
 
