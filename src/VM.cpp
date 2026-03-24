@@ -70,20 +70,7 @@ void calculate(std::vector<Value>& stack, OpCode op)
 }
 } // namespace
 
-VM::Machine::Machine(const std::vector<Instruction>& bytecode, bool debug)
-: debugMode(debug), code(bytecode) { stack.reserve(1024); scopeDepth = 0; }
-
-VM::Machine::Machine() { stack.reserve(1024); scopeDepth = 0; }
-
-int VM::Machine::getScopeDepth() const { return scopeDepth; }
-
-void VM::Machine::incrementScopeDepth() { scopeDepth++; }
-
-void VM::Machine::decrementScopeDepth()
-{
-  locals.erase(scopeDepth);
-  scopeDepth--; 
-}
+VM::Machine::Machine() { stack.reserve(1024); }
 
 void VM::Machine::setDebugMode(bool setDebugMode) { debugMode = setDebugMode; }
 
@@ -193,10 +180,8 @@ InterpretResult VM::Machine::run() {
         break;
 
       case OpCode::OP_DEFINE_GLOBAL: {
-        Value var { stack.back() };
-        stack.pop_back();
-        auto& name = std::get<std::string>(instruction.operand);
-        globals.insert({ name, var});
+        auto name = std::get<std::string>(instruction.operand);
+        globals[name] = stack.back();
         break;
       }
 
@@ -221,31 +206,18 @@ InterpretResult VM::Machine::run() {
       }
 
       case OpCode::OP_DEFINE_LOCAL: {
-        Value var = { stack.back() };
-        stack.pop_back();
-        auto& name = std::get<std::string>(instruction.operand);
-
-        locals[scopeDepth][name] = var;
         break;
       }
 
       case OpCode::OP_GET_LOCAL: {
-        try {
-          Value value = getSymbol(std::get<std::string>(instruction.operand));
-          stack.push_back(value);
-        } catch (const std::runtime_error& error) {
-          std::cerr << error.what() << std::endl;
-          return InterpretResult::INTERPRET_RUNTIME_ERROR;
-        }
-
+        int slot = std::get<int>(instruction.operand);
+        stack.push_back(stack[slot]);
         break;
       }
 
       case OpCode::OP_SET_LOCAL: {
-        Value var { stack.back() };
-        stack.pop_back();
-
-        locals[scopeDepth][std::get<std::string>(instruction.operand)] = var;
+        int slot = std::get<int>(instruction.operand);
+        stack[slot] = stack.back();
         break;
       }
 
@@ -279,27 +251,4 @@ InterpretResult VM::Machine::run() {
         return InterpretResult::INTERPRET_RUNTIME_ERROR;
     }
   }
-}
-
-bool VM::Machine::globalExist(const std::string& name) const
-{
-  return globals.contains(name);
-}
-
-Value VM::Machine::getSymbol(const std::string& name) const
-{
-  for (auto it = locals.rbegin(); it != locals.rend(); ++it) {
-    auto found = it->second.find(name);
-    if (found != it->second.end()) {
-      return found->second;
-    }
-  }
-
-  // local didn't found so let's search in global
-  auto it = globals.find((name));
-  if (it != globals.end()) {
-    return it->second;
-  }
-
-  throw std::runtime_error("Could not get symbol: '" + name + "'. Did you define it?");
 }

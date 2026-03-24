@@ -19,6 +19,7 @@
 bool isInDebugMode = false;
 
 VM::Machine vm{};
+Compiler compiler{};
 
 namespace {
 void run(std::string& source)
@@ -55,9 +56,7 @@ void run(std::string& source)
     std::cout << std::endl;
   }
 
-  std::vector<Instruction> bytecode;
-  Compiler compiler(vm, bytecode, std::move(syntaxTree));
-  compiler.compile();
+  std::vector<Instruction> bytecode = compiler.compile(std::move(syntaxTree));
 
   if (isInDebugMode) {
     disassembleChunk(bytecode, "_main");

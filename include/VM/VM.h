@@ -55,24 +55,12 @@ private:
   std::vector<Instruction> code;
   std::vector<Value> stack;
   std::map<std::string, Value> globals;
-
-  int scopeDepth;
-  std::map<int, std::map<std::string, Value>> locals;
-
 public:
-  Machine(const std::vector<Instruction>& bytecode, bool debug = false);
   Machine();
   InterpretResult run();
 
   void setDebugMode(bool setDebugMode);
   void setByteCode(const std::vector<Instruction>& bytecode);
-
-  bool globalExist(const std::string& name) const;
-  Value getSymbol(const std::string& name) const;
-
-  int getScopeDepth() const;
-  void incrementScopeDepth();
-  void decrementScopeDepth();
 };
 
 } // namespace VM

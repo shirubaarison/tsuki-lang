@@ -7,22 +7,38 @@
 
 #include <memory>
 
+struct Local {
+  std::string name;
+  int depth;
+};
+
 class Compiler : public Visitor {
 private:
-  VM::Machine& machine;
-  std::vector<Instruction>& chunk;
-  std::vector<std::unique_ptr<Stmt>> syntaxTree;
+  std::vector<Instruction> m_chunk;
+  std::vector<std::unique_ptr<Stmt>> m_syntaxTree;
+  std::vector<Local> m_locals;
+  std::vector<std::string> m_globals;
+
+  int m_localCount = 0;
+  int m_scopeDepth = 0;
 
   size_t emit(OpCode op);
   size_t emit(OpCode op, const Value& value);
+
   void emitConstant(const Value& value);
   void patchJump(int jumpPos);
-public:
-  Compiler(VM::Machine& machine, std::vector<Instruction>& targetChunk, std::vector<std::unique_ptr<Stmt>> syntaxTree);
-  void compile();
 
-  void setTargetChunk(std::vector<Instruction>& targetChunk);
-  void setSyntaxTree(std::vector<std::unique_ptr<Stmt>> syntaxTree);
+  int resolveLocal(const std::string& name);
+  int resolveGlobal(const std::string& name);
+
+  void addLocal(const std::string& name);
+  void addGlobal(const std::string& name);
+  void error(const std::string& name);
+  void beginScope();
+  void endScope();
+public:
+  Compiler();
+  std::vector<Instruction> compile(std::vector<std::unique_ptr<Stmt>> syntaxTree);
 
   void visitLiteralExpr(const LiteralExpr* expr) override;
   void visitBinaryExpr(const BinaryExpr* expr) override;
@@ -30,7 +46,6 @@ public:
   void visitBooleanExpr(const BooleanExpr* expr) override;
   void visitGroupingExpr(const GroupingExpr* expr) override;
   void visitNameExpr(const NameExpr* expr) override;
-  void visitPostfixExpr(const PostfixExpr* expr) override;
   void visitPrefixExpr(const PrefixExpr* expr) override;
   void visitVarExpr(const VarExpr* expr) override;
 
@@ -38,8 +53,16 @@ public:
   void visitBlockStmt(const BlockStmt* stmt)override;
   void visitExprStmt(const ExprStmt* stmt)override;
   void visitIfStmt(const IfStmt* stmt)override;
-  void visitVarStmt(const VarStmt* stmt)override;
   void visitWhileStmt(const WhileStmt* stmt)override;
+};
+
+class CompilerError : public std::exception {
+public:
+  CompilerError(std::string m);
+  const char* what() const noexcept override;
+
+private:
+  std::string m_msg;
 };
 
 #endif // !COMPILER_H
