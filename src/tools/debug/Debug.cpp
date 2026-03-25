@@ -5,129 +5,127 @@
 
 #include "runtime/value/Value.h"
 
-void disassembleChunk(const std::vector<Instruction>& code, const char* name)
+void disassembleChunk(const Chunk& chunk, const char* name)
 {
   std::cout << name << ":\n";
 
-  for (size_t offset = 0; offset < code.size(); ++offset) {
-    disassembleInstruction(code[offset], offset);
+  for (size_t offset = 0; offset < chunk.code.size();) {
+    offset = disassembleInstruction(chunk, offset);
   }
 }
 
-void disassembleInstruction(const Instruction& instr, size_t offset)
+static size_t simpleInstruction(const char* name, size_t offset)
+{
+  std::cout << name << "\n";
+  return offset + 1;
+}
+
+static size_t constantInstruction(const char* name, const Chunk& chunk, size_t offset)
+{
+  Byte constantIdx = chunk.code[offset + 1];
+  std::cout << std::setw(16) << std::setfill(' ') << std::left << name;
+  std::visit(ValuePrinter{}, chunk.constants[constantIdx]);
+  std::cout << "\n";
+  return offset + 2;
+}
+
+static size_t jumpInstruction(const char* name, int sign, const Chunk& chunk, size_t offset)
+{
+  Byte jump = chunk.code[offset + 1];
+  std::cout << name << " " << offset << " -> " << (offset + 2 + sign * jump) << "\n";
+  return offset + 2;
+}
+
+size_t disassembleInstruction(const Chunk& chunk, size_t offset)
 {
   std::cout << std::right << std::setw(4) << std::setfill('0') << offset << "   | ";
-  switch (instr.op)
+
+  OpCode op = static_cast<OpCode>(chunk.code[offset]);
+
+  switch (op)
   {
     case OpCode::LOAD_CONSTANT:
-      std::cout << std::setw(16) << std::setfill(' ') << std::left
-        << "LOAD_CONSTANT";
-      std::visit(ValuePrinter{}, instr.operand);
-      std::cout << "\n";
-      break;
+      return constantInstruction("LOAD_CONSTANT", chunk, offset);
 
     case OpCode::ADD:
-      std::cout << "ADD\n";
-      break;
+      return simpleInstruction("ADD", offset);
 
     case OpCode::SUB:
-      std::cout << "OP_SUBTRACT\n";
-      break;
+      return simpleInstruction("OP_SUBTRACT", offset);
 
     case OpCode::MUL:
-      std::cout << "OP_MULTIPLY\n";
-      break;
+      return simpleInstruction("OP_MULTIPLY", offset);
 
     case OpCode::DIV:
-      std::cout << "OP_DIVIDE\n";
-      break;
+      return simpleInstruction("OP_DIVIDE", offset);
 
     case OpCode::PRINT:
-      std::cout << "PRINT\n";
-      break;
+      return simpleInstruction("PRINT", offset);
 
     case OpCode::RET:
-      std::cout << "RET\n";
-      break;
+      return simpleInstruction("RET", offset);
 
     case OpCode::POP:
-      std::cout << "POP\n";
-      break;
+      return simpleInstruction("POP", offset);
 
     case OpCode::GREATER:
-      std::cout << "GREATER\n";
-      break;
+      return simpleInstruction("GREATER", offset);
 
     case OpCode::GREATER_EQUAL:
-      std::cout << "GREATER_EQUAL\n";
-      break;
+      return simpleInstruction("GREATER_EQUAL", offset);
 
     case OpCode::LESS:
-      std::cout << "LESS\n";
-      break;
+      return simpleInstruction("LESS", offset);
 
     case OpCode::LESS_EQUAL:
-      std::cout << "LESS_EQUAL\n";
-      break;
+      return simpleInstruction("LESS_EQUAL", offset);
 
     case OpCode::NOT:
-      std::cout << "NOT\n";
-      break;
+      return simpleInstruction("NOT", offset);
 
     case OpCode::EQUAL:
-      std::cout << "EQUAL\n";
-      break;
+      return simpleInstruction("EQUAL", offset);
 
     case OpCode::NOT_EQUAL:
-      std::cout << "NOT_EQUAL\n";
-      break;
+      return simpleInstruction("NOT_EQUAL", offset);
 
     case OpCode::TRUE:
-      std::cout << "TRUE\n";
-      break;
+      return simpleInstruction("TRUE", offset);
 
     case OpCode::FALSE:
-      std::cout << "FALSE\n";
-      break;
+      return simpleInstruction("FALSE", offset);
 
     case OpCode::NIL:
-      std::cout << "NIL\n";
-      break;
+      return simpleInstruction("NIL", offset);
 
     case OpCode::DEFINE_GLOBAL:
-      std::cout << "DEFINE_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
-      break;
+      return constantInstruction("DEFINE_GLOBAL", chunk, offset);
 
     case OpCode::GET_GLOBAL:
-      std::cout << "GET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
-      break;
+      return constantInstruction("GET_GLOBAL", chunk, offset);
 
     case OpCode::SET_GLOBAL:
-      std::cout << "SET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
-      break;
+      return constantInstruction("SET_GLOBAL", chunk, offset);
 
     case OpCode::DEFINE_LOCAL:
-      std::cout << "DEFINE_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
-      break;
+      return simpleInstruction("DEFINE_LOCAL", offset);
 
     case OpCode::GET_LOCAL:
-      std::cout << "GET_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
-      break;
+      return constantInstruction("GET_LOCAL", chunk, offset);
 
     case OpCode::SET_LOCAL:
-      std::cout << "SET_LOCAL\n";
-      break;
+      return constantInstruction("SET_LOCAL", chunk, offset);
 
     case OpCode::JMP_IF_FALSE:
-      std::cout << "JMP_IF_FALSE " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
-      break;
+      return jumpInstruction("JMP_IF_FALSE", 1, chunk, offset);
 
     case OpCode::JMP:
-      std::cout << "JMP " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
-      break;
+      return jumpInstruction("JMP", 1, chunk, offset);
 
     case OpCode::LOOP:
-      std::cout << "LOOP\n";
-      break;
+      return jumpInstruction("LOOP", -1, chunk, offset);
   }
+
+  std::cout << "Unknown opcode " << static_cast<int>(op) << "\n";
+  return offset + 1;
 }

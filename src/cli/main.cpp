@@ -10,6 +10,7 @@
 #include "compiler/Compiler.h"
 #include "frontend/lexer/Lexer.h"
 #include "frontend/parser/Parser.h"
+#include "ir/Chunk.h"
 #include "runtime/vm/VM.h"
 #include "tools/debug/Debug.h"
 
@@ -51,7 +52,7 @@ void run(std::string &source) {
     std::cout << std::endl;
   }
 
-  std::vector<Instruction> bytecode = compiler.compile(std::move(syntaxTree));
+  Chunk bytecode = compiler.compile(std::move(syntaxTree));
 
   if (isInDebugMode) {
     disassembleChunk(bytecode, "_main");

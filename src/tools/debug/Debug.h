@@ -1,10 +1,9 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include <vector>
-#include "ir/Instruction.h"
+#include "ir/Chunk.h"
 
-void disassembleChunk(const std::vector<Instruction>& code, const char* name);
-void disassembleInstruction(const Instruction& instr, size_t offset);
+void disassembleChunk(const Chunk& chunk, const char* name);
+size_t disassembleInstruction(const Chunk& chunk, size_t offset);
 
 #endif // !DEBUG_H

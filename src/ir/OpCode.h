@@ -1,7 +1,9 @@
 #ifndef OP_CODE_H
 #define OP_CODE_H
 
-enum OpCode {
+#include <cstdint>
+
+enum OpCode : uint8_t {
   LOAD_CONSTANT,
   RET,
   ADD,

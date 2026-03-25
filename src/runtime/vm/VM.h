@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include "runtime/value/Value.h"
-#include "ir/Instruction.h"
+#include "ir/Chunk.h"
 
 enum class InterpretResult {
   INTERPRET_OK,
@@ -18,15 +18,19 @@ private:
   size_t ip = 0;
   bool debugMode = false;
 
-  std::vector<Instruction> code;
+  Chunk chunk;
   std::vector<Value> stack;
   std::map<std::string, Value> globals;
+
+  Byte readByte();
+  Value readConstant();
+
 public:
   Machine();
   InterpretResult run();
 
   void setDebugMode(bool setDebugMode);
-  void setByteCode(const std::vector<Instruction>& bytecode);
+  void setByteCode(const Chunk& chunk);
 };
 
 } // namespace VM

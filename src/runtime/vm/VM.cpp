@@ -74,10 +74,18 @@ VM::Machine::Machine() { stack.reserve(1024); }
 
 void VM::Machine::setDebugMode(bool setDebugMode) { debugMode = setDebugMode; }
 
-void VM::Machine::setByteCode(const std::vector<Instruction>& bytecode)
+void VM::Machine::setByteCode(const Chunk& bytecode)
 {
   ip = 0;
-  code = bytecode;
+  chunk = bytecode;
+}
+
+Byte VM::Machine::readByte() {
+  return chunk.code[ip++];
+}
+
+Value VM::Machine::readConstant() {
+  return chunk.constants[readByte()];
 }
 
 InterpretResult VM::Machine::run() {
@@ -107,22 +115,24 @@ InterpretResult VM::Machine::run() {
       }
       std::cout << std::endl;
 
-      disassembleInstruction(code[ip], ip);
+      disassembleInstruction(chunk, ip);
     }
 
-    const auto& instruction = code[ip++];
+    OpCode instruction = static_cast<OpCode>(readByte());
 
-    switch (instruction.op)
+    switch (instruction)
     {
-      case OpCode::LOAD_CONSTANT:
-        stack.push_back(instruction.operand);
+      case OpCode::LOAD_CONSTANT: {
+        Value constant = readConstant();
+        stack.push_back(constant);
         break;
+      }
 
       case OpCode::ADD:
       case OpCode::SUB:
       case OpCode::MUL:
       case OpCode::DIV:
-        calculate(stack, instruction.op);
+        calculate(stack, instruction);
         break;
 
       case OpCode::POP: {
@@ -180,13 +190,13 @@ InterpretResult VM::Machine::run() {
         break;
 
       case OpCode::DEFINE_GLOBAL: {
-        auto name = std::get<std::string>(instruction.operand);
+        auto name = std::get<std::string>(readConstant());
         globals[name] = stack.back();
         break;
       }
 
       case OpCode::GET_GLOBAL: {
-        auto it = globals.find(std::get<std::string>(instruction.operand));
+        auto it = globals.find(std::get<std::string>(readConstant()));
 
         if (it != globals.end()) {
           stack.push_back(it->second);
@@ -200,7 +210,7 @@ InterpretResult VM::Machine::run() {
       case OpCode::SET_GLOBAL: {
         Value var { stack.back() };
         stack.pop_back();
-        auto& name = std::get<std::string>(instruction.operand);
+        auto name = std::get<std::string>(readConstant());
         globals[name] = var;
         break;
       }
@@ -210,22 +220,22 @@ InterpretResult VM::Machine::run() {
       }
 
       case OpCode::GET_LOCAL: {
-        int slot = std::get<int>(instruction.operand);
+        int slot = std::get<int>(readConstant());
         stack.push_back(stack[slot]);
         break;
       }
 
       case OpCode::SET_LOCAL: {
-        int slot = std::get<int>(instruction.operand);
+        int slot = std::get<int>(readConstant());
         stack[slot] = stack.back();
         break;
       }
 
       case OpCode::JMP_IF_FALSE: {
+        int offset = static_cast<int>(readByte());
         Value var { stack.back() };
 
         if (!isTruthy(var)) {
-          int offset = std::get<int>(instruction.operand);
           ip += offset;
         }
 
@@ -233,13 +243,13 @@ InterpretResult VM::Machine::run() {
       }
 
       case OpCode::JMP: {
-        int offset = std::get<int>(instruction.operand);
+        int offset = static_cast<int>(readByte());
         ip += offset;
         break;
       }
 
       case OpCode::LOOP: {
-        int offset = std::get<int>(instruction.operand);
+        int offset = static_cast<int>(readByte());
         ip -= offset;
         break;
       }

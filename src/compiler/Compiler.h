@@ -2,7 +2,7 @@
 #define COMPILER_H
 
 #include "frontend/ast/Ast.h"
-#include "ir/Instruction.h"
+#include "ir/Chunk.h"
 
 #include <vector>
 
@@ -13,7 +13,7 @@ struct Local {
 
 class Compiler {
 private:
-  std::vector<Instruction> m_chunk;
+  Chunk m_chunk;
   std::vector<Stmt> m_syntaxTree;
   std::vector<Local> m_locals;
   std::vector<std::string> m_globals;
@@ -22,26 +22,27 @@ private:
   int m_scopeDepth = 0;
 
   size_t emit(OpCode op);
-  size_t emit(OpCode op, const Value &value);
+  size_t emit(OpCode op, const Value& value);
 
-  void emitConstant(const Value &value);
+  void emitConstant(const Value& value);
+  size_t emitJump(OpCode op);
   void patchJump(int jumpPos);
 
   int resolveLocal(const std::string &name);
   int resolveGlobal(const std::string &name);
 
-  void addLocal(const std::string &name);
-  void addGlobal(const std::string &name);
-  void error(const std::string &name);
+  void addLocal(const std::string& name);
+  void addGlobal(const std::string& name);
+  void error(const std::string& name);
   void beginScope();
   void endScope();
 
-  void compileExpr(const Expr &expr);
-  void compileStmt(const Stmt &stmt);
+  void compileExpr(const Expr& expr);
+  void compileStmt(const Stmt& stmt);
 
 public:
   Compiler();
-  std::vector<Instruction> compile(std::vector<Stmt> syntaxTree);
+  Chunk compile(std::vector<Stmt> syntaxTree);
 };
 
 class CompilerError : public std::exception {

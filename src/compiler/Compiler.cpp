@@ -14,51 +14,77 @@ CompilerError::CompilerError(std::string m) : m_msg(std::move(m)) {}
 
 const char *CompilerError::what() const noexcept { return m_msg.c_str(); }
 
-void Compiler::error(const std::string &msg) {
+void Compiler::error(const std::string& msg) 
+{
   std::cerr << "CompilerError: " << msg << std::endl;
 }
 
-std::vector<Instruction> Compiler::compile(std::vector<Stmt> syntaxTree) {
-  m_chunk.clear();
+Chunk Compiler::compile(std::vector<Stmt> syntaxTree)
+{
+  m_chunk = Chunk{};
   m_syntaxTree = std::move(syntaxTree);
 
-  try {
+  try
+  {
     for (const auto &stmt : m_syntaxTree)
     compileStmt(stmt);
-  } catch (const CompilerError &compilerError) {
+  }
+  catch (const CompilerError &compilerError)
+  {
     error(compilerError.what());
   }
 
-  m_chunk.push_back({OpCode::RET, std::monostate{}});
+  m_chunk.writeOp(OpCode::RET, 0);
 
   return m_chunk;
 }
 
-size_t Compiler::emit(OpCode op) {
-  m_chunk.push_back(Instruction{op, Value{}});
-  return m_chunk.size() - 1;
+size_t Compiler::emit(OpCode op)
+{
+  size_t pos = m_chunk.code.size();
+  m_chunk.writeOp(op, 0);
+  return pos;
 }
 
-size_t Compiler::emit(OpCode op, const Value &value) {
-  m_chunk.push_back(Instruction{op, value});
-  return m_chunk.size() - 1;
+size_t Compiler::emit(OpCode op, const Value& value)
+{
+  size_t pos = m_chunk.code.size();
+  m_chunk.writeOp(op, 0);
+  int idx = m_chunk.addConstant(value);
+  m_chunk.write(static_cast<Byte>(idx), 0);
+
+  return pos;
 }
 
-void Compiler::emitConstant(const Value &value) {
-  m_chunk.push_back(Instruction{OpCode::LOAD_CONSTANT, value});
+void Compiler::emitConstant(const Value& value)
+{
+  emit(OpCode::LOAD_CONSTANT, value);
 }
 
-void Compiler::compileExpr(const Expr &expr) {
+size_t Compiler::emitJump(OpCode op)
+{
+  size_t pos = m_chunk.code.size();
+  m_chunk.writeOp(op, 0);
+  m_chunk.write(0xFF, 0); // placeholder
+
+  return pos;
+}
+
+void Compiler::compileExpr(const Expr& expr)
+{
   std::visit(
     overload{
-      [&](const std::unique_ptr<LiteralExpr> &e) {
+      [&](const std::unique_ptr<LiteralExpr>& e)
+      {
         emitConstant(e->value);
       },
-      [&](const std::unique_ptr<BinaryExpr> &e) {
-        if (e->op == TokenType::TOKEN_AND) {
+      [&](const std::unique_ptr<BinaryExpr>& e)
+      {
+        if (e->op == TokenType::TOKEN_AND)
+        {
           compileExpr(e->left);
 
-          int endJump = emit(OpCode::JMP_IF_FALSE);
+          int endJump = emitJump(OpCode::JMP_IF_FALSE);
           emit(OpCode::POP);
 
           compileExpr(e->right);
@@ -67,11 +93,12 @@ void Compiler::compileExpr(const Expr &expr) {
           return;
         }
 
-        if (e->op == TokenType::TOKEN_OR) {
+        if (e->op == TokenType::TOKEN_OR)
+        {
           compileExpr(e->left);
 
-          int elseJump = emit(OpCode::JMP_IF_FALSE);
-          int endJump = emit(OpCode::JMP);
+          int elseJump = emitJump(OpCode::JMP_IF_FALSE);
+          int endJump = emitJump(OpCode::JMP);
 
           patchJump(elseJump);
           emit(OpCode::POP);
@@ -85,7 +112,8 @@ void Compiler::compileExpr(const Expr &expr) {
         compileExpr(e->left);
         compileExpr(e->right);
 
-        switch (e->op) {
+        switch (e->op)
+        {
           case TokenType::TOKEN_PLUS:
             emit(OpCode::ADD);
             break;
@@ -120,43 +148,65 @@ void Compiler::compileExpr(const Expr &expr) {
             break;
         }
       },
-      [&](const std::unique_ptr<AssignExpr> &e) {
+      [&](const std::unique_ptr<AssignExpr>& e)
+      {
         const auto &name = e->name;
         compileExpr(e->expr);
 
-        if (m_scopeDepth == 0) {
-          if (resolveGlobal(name) == -1) {
+        if (m_scopeDepth == 0)
+        {
+          if (resolveGlobal(name) == -1)
+          {
             addGlobal(name);
             emit(OpCode::DEFINE_GLOBAL, name);
-          } else {
+          }
+          else
+          {
             emit(OpCode::SET_GLOBAL, name);
           }
-        } else {
+        }
+        else
+        {
           int localSlot = resolveLocal(name);
-          if (localSlot == -1) {
-            if (resolveGlobal(name) == -1) {
+          if (localSlot == -1)
+          {
+            if (resolveGlobal(name) == -1)
+            {
               addLocal(name);
               emit(OpCode::DEFINE_LOCAL);
-            } else {
+            }
+            else
+            {
               emit(OpCode::SET_GLOBAL, name);
             }
-          } else {
+          }
+          else
+          {
             emit(OpCode::SET_LOCAL, localSlot);
           }
         }
       },
-      [&](const std::unique_ptr<BooleanExpr> &e) {
-        if (e->value) {
+      [&](const std::unique_ptr<BooleanExpr>& e)
+      {
+        if (e->value)
+        {
           emit(OpCode::TRUE);
-        } else {
+        }
+        else
+        {
           emit(OpCode::FALSE);
         }
       },
-      [&](const std::unique_ptr<GroupingExpr> &e) { compileExpr(e->expr); },
-      [&](const std::unique_ptr<NameExpr> &e) {
+      [&](const std::unique_ptr<GroupingExpr>& e)
+      {
+        compileExpr(e->expr);
+      },
+      [&](const std::unique_ptr<NameExpr>& e)
+      {
         auto name = e->name;
         int localSlot = resolveLocal(name);
-        if (localSlot != -1) {
+        if (localSlot != -1)
+        {
           emit(OpCode::GET_LOCAL, localSlot);
           return;
         }
@@ -165,35 +215,46 @@ void Compiler::compileExpr(const Expr &expr) {
 
         emit(OpCode::GET_GLOBAL, name);
       },
-      [&](const std::unique_ptr<PrefixExpr> &) {
+      [&](const std::unique_ptr<PrefixExpr>&)
+      {
         // Not yet implemented
       },
-      [&](const std::unique_ptr<VarExpr> &e) { compileExpr(e->rhs); }},
+      [&](const std::unique_ptr<VarExpr>& e)
+      {
+        compileExpr(e->rhs);
+      }
+    },
     expr);
 }
 
-void Compiler::compileStmt(const Stmt &stmt) {
-  std::visit(overload{[&](const std::unique_ptr<PrintStmt> &s) {
+void Compiler::compileStmt(const Stmt &stmt)
+{
+  std::visit(overload{[&](const std::unique_ptr<PrintStmt>& s)
+  {
     compileExpr(s->expr);
     emit(OpCode::PRINT);
   },
-    [&](const std::unique_ptr<BlockStmt> &s) {
+    [&](const std::unique_ptr<BlockStmt>& s)
+    {
       beginScope();
 
-      for (const auto &st : s->statements) {
+      for (const auto &st : s->statements)
+      {
         compileStmt(st);
       }
 
       endScope();
     },
-    [&](const std::unique_ptr<ExprStmt> &s) {
+    [&](const std::unique_ptr<ExprStmt>& s)
+    {
       compileExpr(s->expr);
       // emit(OpCode::POP);
     },
-    [&](const std::unique_ptr<IfStmt> &s) {
+    [&](const std::unique_ptr<IfStmt>& s)
+    {
       compileExpr(s->condition);
 
-      std::size_t jumpToElse = emit(OpCode::JMP_IF_FALSE);
+      std::size_t jumpToElse = emitJump(OpCode::JMP_IF_FALSE);
       emit(OpCode::POP);
       compileStmt(s->thenBranch);
 
@@ -203,27 +264,32 @@ void Compiler::compileStmt(const Stmt &stmt) {
 
       size_t jumpOverElse = 0;
       if (hasElse)
-        jumpOverElse = emit(OpCode::JMP);
+        jumpOverElse = emitJump(OpCode::JMP);
 
       patchJump(jumpToElse);
       emit(OpCode::POP);
 
-      if (hasElse) {
+      if (hasElse)
+      {
         compileStmt(s->elseBranch);
         patchJump(jumpOverElse);
       }
     },
-    [&](const std::unique_ptr<WhileStmt> &s) {
-      int loopStart = m_chunk.size();
+    [&](const std::unique_ptr<WhileStmt>& s)
+    {
+      int loopStart = m_chunk.code.size();
       compileExpr(s->condition);
 
-      std::size_t exitJump = emit(OpCode::JMP_IF_FALSE);
+      std::size_t exitJump = emitJump(OpCode::JMP_IF_FALSE);
       emit(OpCode::POP);
 
       compileStmt(s->body);
 
-      int offset = m_chunk.size() - loopStart + 1;
-      emit(OpCode::LOOP, offset);
+      // Emit LOOP with raw byte offset back to loopStart
+      size_t loopInstrPos = m_chunk.code.size();
+      m_chunk.writeOp(OpCode::LOOP, 0);
+      int offset = static_cast<int>(loopInstrPos + 2 - loopStart);
+      m_chunk.write(static_cast<Byte>(offset), 0);
 
       patchJump(exitJump);
 
@@ -232,8 +298,10 @@ void Compiler::compileStmt(const Stmt &stmt) {
              stmt);
 }
 
-int Compiler::resolveLocal(const std::string &name) {
-  for (int i = m_locals.size() - 1; i >= 0; --i) {
+int Compiler::resolveLocal(const std::string& name)
+{
+  for (int i = m_locals.size() - 1; i >= 0; --i)
+  {
     if (m_locals[i].name == name)
       return i;
   }
@@ -241,8 +309,10 @@ int Compiler::resolveLocal(const std::string &name) {
   return -1;
 }
 
-int Compiler::resolveGlobal(const std::string &name) {
-  for (size_t i = 0; i < m_globals.size(); ++i) {
+int Compiler::resolveGlobal(const std::string& name)
+{
+  for (size_t i = 0; i < m_globals.size(); ++i)
+  {
     if (m_globals[i] == name)
       return i;
   }
@@ -250,24 +320,29 @@ int Compiler::resolveGlobal(const std::string &name) {
   return -1;
 }
 
-void Compiler::addLocal(const std::string &name) {
+void Compiler::addLocal(const std::string& name)
+{
   Local local = {name, m_scopeDepth};
   m_locals.push_back(local);
 }
 
-void Compiler::addGlobal(const std::string &name) { m_globals.push_back(name); }
+void Compiler::addGlobal(const std::string& name) { m_globals.push_back(name); }
 
-void Compiler::patchJump(int jumpPos) {
-  int offset = static_cast<int>(m_chunk.size() - 1 - jumpPos);
-  m_chunk[jumpPos].operand = offset;
+void Compiler::patchJump(int jumpPos)
+{
+  // jumpPos points to the opcode byte; jumpPos+1 is the operand byte
+  int offset = static_cast<int>(m_chunk.code.size()) - jumpPos - 2;
+  m_chunk.code[jumpPos + 1] = static_cast<Byte>(offset);
 }
 
 void Compiler::beginScope() { m_scopeDepth++; }
 
-void Compiler::endScope() {
+void Compiler::endScope()
+{
   m_scopeDepth--;
 
-  while (!m_locals.empty() && m_locals.back().depth > m_scopeDepth) {
+  while (!m_locals.empty() && m_locals.back().depth > m_scopeDepth)
+  {
     emit(OpCode::POP);
     m_locals.pop_back();
   }
