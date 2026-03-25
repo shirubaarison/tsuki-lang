@@ -50,7 +50,7 @@ std::vector<Instruction> Compiler::compile(std::vector<std::unique_ptr<Stmt>> sy
     error(compilerError.what());
   }
 
-  m_chunk.push_back({OpCode::OP_RETURN, std::monostate{}});
+  m_chunk.push_back({OpCode::RET, std::monostate{}});
 
   return m_chunk;
 }
@@ -69,7 +69,7 @@ size_t Compiler::emit(OpCode op, const Value& value)
 
 void Compiler::emitConstant(const Value& value)
 {
-  m_chunk.push_back(Instruction{OpCode::OP_CONSTANT, value});
+  m_chunk.push_back(Instruction{OpCode::LOAD_CONSTANT, value});
 }
 
 void Compiler::visitLiteralExpr(const LiteralExpr* expr)
@@ -82,8 +82,8 @@ void Compiler::visitBinaryExpr(const BinaryExpr* expr)
   if (expr->getOperatorType() == TokenType::TOKEN_AND) {
     expr->getLeft()->accept(*this);
 
-    int endJump = emit(OpCode::OP_JUMP_IF_FALSE);
-    emit(OpCode::OP_POP);
+    int endJump = emit(OpCode::JMP_IF_FALSE);
+    emit(OpCode::POP);
 
     expr->getRight()->accept(*this);
 
@@ -94,11 +94,11 @@ void Compiler::visitBinaryExpr(const BinaryExpr* expr)
   if (expr->getOperatorType() == TokenType::TOKEN_OR) {
     expr->getLeft()->accept(*this);
 
-    int elseJump = emit(OpCode::OP_JUMP_IF_FALSE);
-    int endJump  = emit(OpCode::OP_JUMP);
+    int elseJump = emit(OpCode::JMP_IF_FALSE);
+    int endJump  = emit(OpCode::JMP);
 
     patchJump(elseJump);
-    emit(OpCode::OP_POP);
+    emit(OpCode::POP);
 
     expr->getRight()->accept(*this);
 
@@ -110,16 +110,16 @@ void Compiler::visitBinaryExpr(const BinaryExpr* expr)
   expr->getRight()->accept(*this);
 
   switch (expr->getOperatorType()) {
-    case TokenType::TOKEN_PLUS:          emit(OpCode::OP_ADD); break;
-    case TokenType::TOKEN_MINUS:         emit(OpCode::OP_SUB); break;
-    case TokenType::TOKEN_STAR:          emit(OpCode::OP_MUL); break;
-    case TokenType::TOKEN_SLASH:         emit(OpCode::OP_DIV); break;
-    case TokenType::TOKEN_GREATER:       emit(OpCode::OP_GREATER); break;
-    case TokenType::TOKEN_GREATER_EQUAL: emit(OpCode::OP_GREATER_EQUAL); break;
-    case TokenType::TOKEN_EQUAL_EQUAL:   emit(OpCode::OP_EQUAL); break;
-    case TokenType::TOKEN_BANG_EQUAL:    emit(OpCode::OP_NOT_EQUAL); break;
-    case TokenType::TOKEN_LESS:          emit(OpCode::OP_LESS); break;
-    case TokenType::TOKEN_LESS_EQUAL:    emit(OpCode::OP_LESS_EQUAL); break;
+    case TokenType::TOKEN_PLUS:          emit(OpCode::ADD); break;
+    case TokenType::TOKEN_MINUS:         emit(OpCode::SUB); break;
+    case TokenType::TOKEN_STAR:          emit(OpCode::MUL); break;
+    case TokenType::TOKEN_SLASH:         emit(OpCode::DIV); break;
+    case TokenType::TOKEN_GREATER:       emit(OpCode::GREATER); break;
+    case TokenType::TOKEN_GREATER_EQUAL: emit(OpCode::GREATER_EQUAL); break;
+    case TokenType::TOKEN_EQUAL_EQUAL:   emit(OpCode::EQUAL); break;
+    case TokenType::TOKEN_BANG_EQUAL:    emit(OpCode::NOT_EQUAL); break;
+    case TokenType::TOKEN_LESS:          emit(OpCode::LESS); break;
+    case TokenType::TOKEN_LESS_EQUAL:    emit(OpCode::LESS_EQUAL); break;
     default: break;
   }
 }
@@ -134,11 +134,11 @@ void Compiler::visitAssignExpr(const AssignExpr* expr)
     if (resolveGlobal(name) == -1)
     {
       addGlobal(name);
-      emit(OpCode::OP_DEFINE_GLOBAL, name);
+      emit(OpCode::DEFINE_GLOBAL, name);
     }
     else
     {
-      emit(OpCode::OP_SET_GLOBAL, name);
+      emit(OpCode::SET_GLOBAL, name);
     }
   }
   else
@@ -149,16 +149,16 @@ void Compiler::visitAssignExpr(const AssignExpr* expr)
       if (resolveGlobal(name) == -1)
       {
         addLocal(name);
-        emit(OpCode::OP_DEFINE_LOCAL);
+        emit(OpCode::DEFINE_LOCAL);
       }
       else
       {
-        emit(OpCode::OP_SET_GLOBAL, name);
+        emit(OpCode::SET_GLOBAL, name);
       }
     }
     else
     {
-      emit(OpCode::OP_SET_LOCAL, localSlot);
+      emit(OpCode::SET_LOCAL, localSlot);
     }
   }
 }
@@ -166,9 +166,9 @@ void Compiler::visitAssignExpr(const AssignExpr* expr)
 void Compiler::visitBooleanExpr(const BooleanExpr* expr)
 {
   if (expr->getValue()) {
-    emit(OpCode::OP_TRUE);
+    emit(OpCode::TRUE);
   } else {
-    emit(OpCode::OP_FALSE);
+    emit(OpCode::FALSE);
   }
 }
 
@@ -215,13 +215,13 @@ void Compiler::visitNameExpr(const NameExpr* expr)
   int localSlot = resolveLocal(name);
   if (localSlot != -1)
   {
-    emit(OpCode::OP_GET_LOCAL, localSlot);
+    emit(OpCode::GET_LOCAL, localSlot);
     return;
   }
   if (resolveGlobal(name) == -1)
     throw CompilerError("Undefined variable '" + name + "'");
 
-  emit(OpCode::OP_GET_GLOBAL, name);
+  emit(OpCode::GET_GLOBAL, name);
 }
 
 void Compiler::visitPrefixExpr(const PrefixExpr*) {}
@@ -234,7 +234,7 @@ void Compiler::visitVarExpr(const VarExpr* expr)
 void Compiler::visitPrintStmt(const PrintStmt* stmt)
 {
   stmt->getExpr()->accept(*this);
-  emit(OpCode::OP_PRINT);
+  emit(OpCode::PRINT);
 }
 
 void Compiler::beginScope()
@@ -248,7 +248,7 @@ void Compiler::endScope()
 
   while (!m_locals.empty() && m_locals.back().depth > m_scopeDepth)
   {
-    emit(OpCode::OP_POP);
+    emit(OpCode::POP);
     m_locals.pop_back();
   }
 }
@@ -268,7 +268,7 @@ void Compiler::visitBlockStmt(const BlockStmt* stmt)
 void Compiler::visitExprStmt(const ExprStmt* stmt)
 {
   stmt->getExpr()->accept(*this);
-  // emit(OpCode::OP_POP);
+  // emit(OpCode::POP);
 }
 
 void Compiler::patchJump(int jumpPos)
@@ -280,17 +280,17 @@ void Compiler::patchJump(int jumpPos)
 void Compiler::visitIfStmt(const IfStmt* stmt)
 {
   stmt->getCondition()->accept(*this);
-  emit(OpCode::OP_POP);
+  emit(OpCode::POP);
 
-  std::size_t jumpToElse = emit(OpCode::OP_JUMP_IF_FALSE);
+  std::size_t jumpToElse = emit(OpCode::JMP_IF_FALSE);
   stmt->getThen()->accept(*this);
 
   size_t jumpOverElse = 0;
   if (stmt->getElse())
-    jumpOverElse = emit(OpCode::OP_JUMP);
+    jumpOverElse = emit(OpCode::JMP);
 
   patchJump(jumpToElse);
-  emit(OpCode::OP_POP);
+  emit(OpCode::POP);
 
   if (stmt->getElse()) {
     stmt->getElse()->accept(*this);
@@ -303,15 +303,15 @@ void Compiler::visitWhileStmt(const WhileStmt* stmt)
   int loopStart = m_chunk.size();
   stmt->getCondition()->accept(*this);
 
-  std::size_t exitJump = emit(OpCode::OP_JUMP_IF_FALSE);
-  emit(OpCode::OP_POP);
+  std::size_t exitJump = emit(OpCode::JMP_IF_FALSE);
+  emit(OpCode::POP);
 
   stmt->getStatement()->accept(*this);
 
   int offset = m_chunk.size() - loopStart + 1;
-  emit(OpCode::OP_LOOP, offset);
+  emit(OpCode::LOOP, offset);
 
   patchJump(exitJump);
 
-  emit(OpCode::OP_POP);
+  emit(OpCode::POP);
 }

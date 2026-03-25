@@ -20,115 +20,115 @@ void disassembleInstruction(const Instruction& instr, size_t offset)
   std::cout << std::right << std::setw(4) << std::setfill('0') << offset << "   | ";
   switch (instr.op)
   {
-    case OpCode::OP_CONSTANT:
+    case OpCode::LOAD_CONSTANT:
       std::cout << std::setw(16) << std::setfill(' ') << std::left
-        << "OP_CONSTANT";
+        << "LOAD_CONSTANT";
       std::visit(ValuePrinter{}, instr.operand);
       std::cout << "\n";
       break;
 
-    case OpCode::OP_ADD:
-      std::cout << "OP_ADD\n";
+    case OpCode::ADD:
+      std::cout << "ADD\n";
       break;
 
-    case OpCode::OP_SUB:
+    case OpCode::SUB:
       std::cout << "OP_SUBTRACT\n";
       break;
 
-    case OpCode::OP_MUL:
+    case OpCode::MUL:
       std::cout << "OP_MULTIPLY\n";
       break;
 
-    case OpCode::OP_DIV:
+    case OpCode::DIV:
       std::cout << "OP_DIVIDE\n";
       break;
 
-    case OpCode::OP_PRINT:
-      std::cout << "OP_PRINT\n";
+    case OpCode::PRINT:
+      std::cout << "PRINT\n";
       break;
 
-    case OpCode::OP_RETURN:
-      std::cout << "OP_RETURN\n";
+    case OpCode::RET:
+      std::cout << "RET\n";
       break;
 
-    case OpCode::OP_POP:
-      std::cout << "OP_POP\n";
+    case OpCode::POP:
+      std::cout << "POP\n";
       break;
 
-    case OpCode::OP_GREATER:
-      std::cout << "OP_GREATER\n";
+    case OpCode::GREATER:
+      std::cout << "GREATER\n";
       break;
 
-    case OpCode::OP_GREATER_EQUAL:
-      std::cout << "OP_GREATER_EQUAL\n";
+    case OpCode::GREATER_EQUAL:
+      std::cout << "GREATER_EQUAL\n";
       break;
 
-    case OpCode::OP_LESS:
-      std::cout << "OP_LESS\n";
+    case OpCode::LESS:
+      std::cout << "LESS\n";
       break;
 
-    case OpCode::OP_LESS_EQUAL:
-      std::cout << "OP_LESS_EQUAL\n";
+    case OpCode::LESS_EQUAL:
+      std::cout << "LESS_EQUAL\n";
       break;
 
-    case OpCode::OP_NOT:
-      std::cout << "OP_NOT\n";
+    case OpCode::NOT:
+      std::cout << "NOT\n";
       break;
 
-    case OpCode::OP_EQUAL:
-      std::cout << "OP_EQUAL\n";
+    case OpCode::EQUAL:
+      std::cout << "EQUAL\n";
       break;
 
-    case OpCode::OP_NOT_EQUAL:
-      std::cout << "OP_NOT_EQUAL\n";
+    case OpCode::NOT_EQUAL:
+      std::cout << "NOT_EQUAL\n";
       break;
 
-    case OpCode::OP_TRUE:
-      std::cout << "OP_TRUE\n";
+    case OpCode::TRUE:
+      std::cout << "TRUE\n";
       break;
 
-    case OpCode::OP_FALSE:
-      std::cout << "OP_FALSE\n";
+    case OpCode::FALSE:
+      std::cout << "FALSE\n";
       break;
 
-    case OpCode::OP_NIL:
-      std::cout << "OP_NIL\n";
+    case OpCode::NIL:
+      std::cout << "NIL\n";
       break;
 
-    case OpCode::OP_DEFINE_GLOBAL:
-      std::cout << "OP_DEFINE_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
+    case OpCode::DEFINE_GLOBAL:
+      std::cout << "DEFINE_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
-    case OpCode::OP_GET_GLOBAL:
-      std::cout << "OP_GET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
+    case OpCode::GET_GLOBAL:
+      std::cout << "GET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
-    case OpCode::OP_SET_GLOBAL:
-      std::cout << "OP_SET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
+    case OpCode::SET_GLOBAL:
+      std::cout << "SET_GLOBAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
-    case OpCode::OP_DEFINE_LOCAL:
-      std::cout << "OP_DEFINE_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
+    case OpCode::DEFINE_LOCAL:
+      std::cout << "DEFINE_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
-    case OpCode::OP_GET_LOCAL:
-      std::cout << "OP_GET_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
+    case OpCode::GET_LOCAL:
+      std::cout << "GET_LOCAL  " << std::get<std::string>(instr.operand) << "\n";
       break;
 
-    case OpCode::OP_SET_LOCAL:
-      std::cout << "OP_SET_LOCAL\n";
+    case OpCode::SET_LOCAL:
+      std::cout << "SET_LOCAL\n";
       break;
 
-    case OpCode::OP_JUMP_IF_FALSE:
-      std::cout << "OP_JUMP_IF_FALSE " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
+    case OpCode::JMP_IF_FALSE:
+      std::cout << "JMP_IF_FALSE " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
       break;
 
-    case OpCode::OP_JUMP:
-      std::cout << "OP_JUMP " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
+    case OpCode::JMP:
+      std::cout << "JMP " << offset << " -> " << offset + std::get<int>(instr.operand) << "\n";
       break;
 
-    case OpCode::OP_LOOP:
-      std::cout << "OP_LOOP\n";
+    case OpCode::LOOP:
+      std::cout << "LOOP\n";
       break;
   }
 }

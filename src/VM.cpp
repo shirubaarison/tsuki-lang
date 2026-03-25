@@ -54,15 +54,15 @@ void calculate(std::vector<Value>& stack, OpCode op)
 
   double result;
   switch (op) {
-    case OpCode::OP_ADD: result = lhs + rhs; break;
-    case OpCode::OP_SUB: result = lhs - rhs; break;
-    case OpCode::OP_MUL: result = lhs * rhs; break;
-    case OpCode::OP_DIV: result = lhs / rhs; break;
+    case OpCode::ADD: result = lhs + rhs; break;
+    case OpCode::SUB: result = lhs - rhs; break;
+    case OpCode::MUL: result = lhs * rhs; break;
+    case OpCode::DIV: result = lhs / rhs; break;
     default:
       throw std::runtime_error("Invalid numeric operation.");
   }
 
-  if (isType<int>(a) && isType<int>(b) && op != OpCode::OP_DIV) {
+  if (isType<int>(a) && isType<int>(b) && op != OpCode::DIV) {
     stack.push_back(static_cast<int>(result));
   } else {
     stack.push_back(result);
@@ -114,18 +114,18 @@ InterpretResult VM::Machine::run() {
 
     switch (instruction.op)
     {
-      case OpCode::OP_CONSTANT:
+      case OpCode::LOAD_CONSTANT:
         stack.push_back(instruction.operand);
         break;
 
-      case OpCode::OP_ADD:
-      case OpCode::OP_SUB:
-      case OpCode::OP_MUL:
-      case OpCode::OP_DIV:
+      case OpCode::ADD:
+      case OpCode::SUB:
+      case OpCode::MUL:
+      case OpCode::DIV:
         calculate(stack, instruction.op);
         break;
 
-      case OpCode::OP_POP: {
+      case OpCode::POP: {
         if (stack.empty()) {
           std::cout << "Stack is empty" << std::endl;
         } else {
@@ -134,7 +134,7 @@ InterpretResult VM::Machine::run() {
         break;
       }
 
-      case OpCode::OP_PRINT: {
+      case OpCode::PRINT: {
         if (stack.empty()) {
           return InterpretResult::INTERPRET_RUNTIME_ERROR;
         }
@@ -147,7 +147,7 @@ InterpretResult VM::Machine::run() {
         break;
       }
 
-      case OpCode::OP_NOT: {
+      case OpCode::NOT: {
         Value value = stack.back();
         stack.pop_back();
 
@@ -155,37 +155,37 @@ InterpretResult VM::Machine::run() {
         break;
       }
 
-      case OpCode::OP_TRUE:
+      case OpCode::TRUE:
         stack.push_back(true);
         break;
 
-      case OpCode::OP_FALSE:
+      case OpCode::FALSE:
         stack.push_back(false);
         break;
 
-      case OpCode::OP_EQUAL:
+      case OpCode::EQUAL:
         binaryCompare(stack, [](Value a, Value b){ return a == b; });
         break;
 
-      case OpCode::OP_NOT_EQUAL:
+      case OpCode::NOT_EQUAL:
         binaryCompare(stack, [](Value a, Value b) { return a != b; });
         break;
 
-      case OpCode::OP_LESS:
+      case OpCode::LESS:
         binaryCompare(stack, [](Value a, Value b){ return a < b; });
         break;
 
-      case OpCode::OP_GREATER:
+      case OpCode::GREATER:
         binaryCompare(stack, [](Value a, Value b){ return a > b; });
         break;
 
-      case OpCode::OP_DEFINE_GLOBAL: {
+      case OpCode::DEFINE_GLOBAL: {
         auto name = std::get<std::string>(instruction.operand);
         globals[name] = stack.back();
         break;
       }
 
-      case OpCode::OP_GET_GLOBAL: {
+      case OpCode::GET_GLOBAL: {
         auto it = globals.find(std::get<std::string>(instruction.operand));
 
         if (it != globals.end()) {
@@ -197,7 +197,7 @@ InterpretResult VM::Machine::run() {
         return InterpretResult::INTERPRET_RUNTIME_ERROR;
       }
 
-      case OpCode::OP_SET_GLOBAL: {
+      case OpCode::SET_GLOBAL: {
         Value var { stack.back() };
         stack.pop_back();
         auto& name = std::get<std::string>(instruction.operand);
@@ -205,23 +205,23 @@ InterpretResult VM::Machine::run() {
         break;
       }
 
-      case OpCode::OP_DEFINE_LOCAL: {
+      case OpCode::DEFINE_LOCAL: {
         break;
       }
 
-      case OpCode::OP_GET_LOCAL: {
+      case OpCode::GET_LOCAL: {
         int slot = std::get<int>(instruction.operand);
         stack.push_back(stack[slot]);
         break;
       }
 
-      case OpCode::OP_SET_LOCAL: {
+      case OpCode::SET_LOCAL: {
         int slot = std::get<int>(instruction.operand);
         stack[slot] = stack.back();
         break;
       }
 
-      case OpCode::OP_JUMP_IF_FALSE: {
+      case OpCode::JMP_IF_FALSE: {
         Value var { stack.back() };
 
         if (!isTruthy(var)) {
@@ -232,19 +232,19 @@ InterpretResult VM::Machine::run() {
         break;
       }
 
-      case OpCode::OP_JUMP: {
+      case OpCode::JMP: {
         int offset = std::get<int>(instruction.operand);
         ip += offset;
         break;
       }
 
-      case OpCode::OP_LOOP: {
+      case OpCode::LOOP: {
         int offset = std::get<int>(instruction.operand);
         ip -= offset;
         break;
       }
 
-      case OpCode::OP_RETURN:
+      case OpCode::RET:
         return InterpretResult::INTERPRET_OK;
 
       default:
