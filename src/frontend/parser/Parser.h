@@ -1,17 +1,15 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "frontend/ast/Ast.h"
 #include "frontend/lexer/Lexer.h"
-#include "frontend/ast/Expr.h"
-#include "frontend/ast/Stmt.h"
 
-#include <memory>
 #include <vector>
 
 class Parser {
 public:
   Parser(std::vector<Token> tokens);
-  std::vector<std::unique_ptr<Stmt>> parse();
+  std::vector<Stmt> parse();
 
   enum class Precedence {
     PREC_NONE,
@@ -31,7 +29,7 @@ public:
 
 private:
   std::vector<Token> tokens;
-  std::vector<std::unique_ptr<Stmt>> stmts;
+  std::vector<Stmt> stmts;
 
   Token current;
   Token previous;
@@ -50,24 +48,23 @@ private:
   bool match(TokenType type);
 
   void advance();
-  void consume(TokenType type, const std::string& message);
-  void error(Token token, const std::string& message);
+  void consume(TokenType type, const std::string &message);
+  void error(Token token, const std::string &message);
 
-  std::unique_ptr<Stmt> declaration();
-  std::unique_ptr<Stmt> statement();
-  std::unique_ptr<Stmt> block();
-  std::unique_ptr<Stmt> expressionStatement();
-  std::unique_ptr<Stmt> printStatement();
-  std::unique_ptr<Stmt> ifStatement();
-  std::unique_ptr<Stmt> whileStatement();
+  Stmt declaration();
+  Stmt statement();
+  Stmt block();
+  Stmt expressionStatement();
+  Stmt printStatement();
+  Stmt ifStatement();
+  Stmt whileStatement();
 
-  std::unique_ptr<Expr> parsePrecedence(Precedence precedence);
+  Expr parsePrecedence(Precedence precedence);
 
-  std::unique_ptr<Expr> expression();
-  std::unique_ptr<Expr> parseNud(const Token& token);
-  std::unique_ptr<Expr> parseLhs(bool canAssign, std::unique_ptr<Expr> lhs,
-                                 TokenType op, std::unique_ptr<Expr> rhs);
-  std::unique_ptr<Expr> parseBinary(const Token &token);
+  Expr expression();
+  Expr parseNud(const Token &token);
+  Expr parseLhs(bool canAssign, Expr lhs, TokenType op, Expr rhs);
+  Expr parseBinary(const Token &token);
 
   void synchronize();
 };
@@ -75,7 +72,7 @@ private:
 class ParserError : public std::exception {
 public:
   ParserError(Token token, std::string m);
-  const char* what() const noexcept override;
+  const char *what() const noexcept override;
   const Token getToken() const;
 
 private:

@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iostream>
 
-#include <memory>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <sstream>
@@ -11,8 +10,8 @@
 #include "compiler/Compiler.h"
 #include "frontend/lexer/Lexer.h"
 #include "frontend/parser/Parser.h"
-#include "tools/debug/Debug.h"
 #include "runtime/vm/VM.h"
+#include "tools/debug/Debug.h"
 
 #define VERSION "0.0.1"
 
@@ -22,14 +21,12 @@ VM::Machine vm{};
 Compiler compiler{};
 
 namespace {
-void run(std::string& source)
-{
+void run(std::string &source) {
   Lexer lexer(source);
 
   std::vector<Token> tokens = lexer.scanTokens();
 
-  if (isInDebugMode)
-  {
+  if (isInDebugMode) {
     for (Token t : tokens) {
       if (t.type != TokenType::TOKEN_EOF) {
         std::cout << t.lexeme << "\t" << tokenTypeToString(t.type) << std::endl;
@@ -40,17 +37,15 @@ void run(std::string& source)
 
   Parser parser(tokens);
 
-  std::vector<std::unique_ptr<Stmt>> syntaxTree = parser.parse();
+  std::vector<Stmt> syntaxTree = parser.parse();
 
   if (parser.getHadError()) {
     return;
   }
 
-  if (isInDebugMode)
-  {
-    for (const auto& stmt : syntaxTree)
-    if (stmt) {
-      stmt->print(std::cout);
+  if (isInDebugMode) {
+    for (const auto &stmt : syntaxTree) {
+      printStmt(std::cout, stmt);
       std::cout << std::endl;
     }
     std::cout << std::endl;
@@ -67,33 +62,30 @@ void run(std::string& source)
   vm.run();
 }
 
-void help(bool man = false)
-{
+void help(bool man = false) {
   std::cout << "Tsuki is a dynamically-typed interpreted language that "
-    "compiles source code to bytecode instructions executed by a "
-    "stack-based virtual machine" << std::endl;
-  if (!man)
-  {
+               "compiles source code to bytecode instructions executed by a "
+               "stack-based virtual machine"
+            << std::endl;
+  if (!man) {
     std::cout << "Available commands:\n" << "  - help\n  - quit" << std::endl;
-  }
-  else
-  {
+  } else {
     std::cout << "Available options:\n";
     std::cout << "  -h, --help  \t give this help list" << std::endl;
-    std::cout << "  -d, --debug \t print debug information about lexer, parser, compilated code and vm backtrace" << std::endl;
+    std::cout << "  -d, --debug \t print debug information about lexer, "
+                 "parser, compilated code and vm backtrace"
+              << std::endl;
   }
 }
 
-void repl()
-{
+void repl() {
   std::cout << "Tsuki version " << VERSION
             << "\nType \"help\" for more information.\n";
 
   using_history();
 
-  while (true)
-  {
-    char* line = readline(">> ");
+  while (true) {
+    char *line = readline(">> ");
     if (!line) {
       std::cout << std::endl;
       break;
@@ -110,12 +102,10 @@ void repl()
 
     if (input == "quit") {
       break;
-    }
-    else if (input == "clear") {
+    } else if (input == "clear") {
       std::cout << "\033[2J\033[H";
       continue;
-    }
-    else if (input == "help") {
+    } else if (input == "help") {
       help();
       continue;
     }
@@ -130,7 +120,7 @@ struct Options {
   std::string file;
 };
 
-Options parseArgs(int argc, char* argv[]) {
+Options parseArgs(int argc, char *argv[]) {
   Options opts;
 
   for (int i = 1; i < argc; ++i) {
@@ -138,15 +128,12 @@ Options parseArgs(int argc, char* argv[]) {
 
     if (arg == "-h" || arg == "--help") {
       opts.help = true;
-    }
-    else if (arg == "-d" || arg == "--debug") {
+    } else if (arg == "-d" || arg == "--debug") {
       opts.debug = true;
-    }
-    else if (arg.starts_with("-")) {
+    } else if (arg.starts_with("-")) {
       std::cerr << "Unknown option: " << arg << std::endl;
       exit(64);
-    }
-    else {
+    } else {
       if (!opts.file.empty()) {
         std::cerr << "Multiple input files provided\n";
         exit(64);
@@ -158,8 +145,7 @@ Options parseArgs(int argc, char* argv[]) {
   return opts;
 }
 
-std::string openFile(const std::string& path)
-{
+std::string openFile(const std::string &path) {
   std::ifstream file(path);
   if (!file) {
     std::cerr << "Unable to open file: " << path << std::endl;
@@ -170,10 +156,9 @@ std::string openFile(const std::string& path)
   buffer << file.rdbuf();
   return buffer.str();
 }
-}
+} // namespace
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
   Options opts = parseArgs(argc, argv);
 
   if (opts.help) {
@@ -187,8 +172,7 @@ int main(int argc, char* argv[])
   if (!opts.file.empty()) {
     std::string content = openFile(opts.file);
     run(content);
-  }
-  else {
+  } else {
     repl();
   }
 

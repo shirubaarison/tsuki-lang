@@ -5,67 +5,52 @@
 #include <string>
 #include <variant>
 
+#include "frontend/ast/Ast.h"
 #include "frontend/lexer/Lexer.h"
 #include "frontend/token/TokenType.h"
-
 #include "runtime/value/Value.h"
-#include "stmt/ExprStmt.h"
-#include "stmt/PrintStmt.h"
-#include "stmt/IfStmt.h"
-#include "stmt/BlockStmt.h"
-#include "stmt/WhileStmt.h"
-
-#include "frontend/ast/Expr.h"
-#include "expressions/BinaryExpr.h"
-#include "expressions/AssignExpr.h"
-#include "expressions/BooleanExpr.h"
-#include "expressions/GroupingExpr.h"
-#include "expressions/LiteralExpr.h"
-#include "expressions/NameExpr.h"
-#include "expressions/PrefixExpr.h"
 
 namespace {
-  inline Parser::Precedence getPrecedence(Token op)
-  {
-    switch (op.type)
-    {
-      case TokenType::TOKEN_EQUAL:
-        return Parser::Precedence::PREC_ASSIGNMENT;
+inline Parser::Precedence getPrecedence(Token op) {
+  switch (op.type) {
+    case TokenType::TOKEN_EQUAL:
+      return Parser::Precedence::PREC_ASSIGNMENT;
 
-      case TokenType::TOKEN_EQUAL_EQUAL:
-      case TokenType::TOKEN_BANG_EQUAL:
-        return Parser::Precedence::PREC_EQUALITY;
+    case TokenType::TOKEN_EQUAL_EQUAL:
+    case TokenType::TOKEN_BANG_EQUAL:
+      return Parser::Precedence::PREC_EQUALITY;
 
-      case TokenType::TOKEN_GREATER:
-      case TokenType::TOKEN_GREATER_EQUAL:
-      case TokenType::TOKEN_LESS:
-      case TokenType::TOKEN_LESS_EQUAL:
-        return Parser::Precedence::PREC_COMPARISON;
+    case TokenType::TOKEN_GREATER:
+    case TokenType::TOKEN_GREATER_EQUAL:
+    case TokenType::TOKEN_LESS:
+    case TokenType::TOKEN_LESS_EQUAL:
+      return Parser::Precedence::PREC_COMPARISON;
 
-      case TokenType::TOKEN_PLUS:
-      case TokenType::TOKEN_MINUS:
-        return Parser::Precedence::PREC_TERM;
+    case TokenType::TOKEN_PLUS:
+    case TokenType::TOKEN_MINUS:
+      return Parser::Precedence::PREC_TERM;
 
-      case TokenType::TOKEN_STAR:
-      case TokenType::TOKEN_SLASH:
-        return Parser::Precedence::PREC_FACTOR;
+    case TokenType::TOKEN_STAR:
+    case TokenType::TOKEN_SLASH:
+      return Parser::Precedence::PREC_FACTOR;
 
-      case TokenType::TOKEN_AND:
-        return Parser::Precedence::PREC_AND;
+    case TokenType::TOKEN_AND:
+      return Parser::Precedence::PREC_AND;
 
-      case TokenType::TOKEN_OR:
-        return Parser::Precedence::PREC_OR;
+    case TokenType::TOKEN_OR:
+      return Parser::Precedence::PREC_OR;
 
-      default:
-        return Parser::Precedence::PREC_NONE;
-    }
+    default:
+      return Parser::Precedence::PREC_NONE;
   }
 }
+} // namespace
 
 Parser::Parser(std::vector<Token> tokens)
-    : tokens(tokens), hadError(false), panicMode(false), currentIndex(0) {}
+: tokens(tokens), hadError(false), panicMode(false), currentIndex(0) {}
 
-ParserError::ParserError(Token token, std::string m) : mToken(token), msg(std::move(m)) {}
+ParserError::ParserError(Token token, std::string m)
+: mToken(token), msg(std::move(m)) {}
 
 const char *ParserError::what() const noexcept { return msg.c_str(); }
 
@@ -73,24 +58,22 @@ const Token ParserError::getToken() const { return mToken; }
 
 bool Parser::getHadError() const { return hadError; }
 
-std::vector<std::unique_ptr<Stmt>> Parser::parse()
-{
+std::vector<Stmt> Parser::parse() {
   if (!this->tokens.empty()) {
     current = this->tokens[0];
   }
 
   while (!isAtEnd()) {
-    std::unique_ptr<Stmt> stmt = declaration();
+    Stmt stmt = declaration();
     stmts.push_back(std::move(stmt));
   }
 
   return std::move(stmts);
 }
 
-std::unique_ptr<Stmt> Parser::declaration()
-{
+Stmt Parser::declaration() {
   try {
-      return statement();
+    return statement();
   } catch (const ParserError &parserError) {
     error(parserError.getToken(), parserError.what());
 
@@ -98,70 +81,67 @@ std::unique_ptr<Stmt> Parser::declaration()
       synchronize();
     }
 
-    return nullptr;
+    return Stmt{std::make_unique<ExprStmt>(ExprStmt{
+      Expr{std::make_unique<LiteralExpr>(LiteralExpr{std::monostate{}})}})};
   }
 }
 
-std::unique_ptr<Stmt> Parser::statement()
-{
+Stmt Parser::statement() {
   if (match(TokenType::TOKEN_PRINT)) {
     return printStatement();
   } else if (match(TokenType::TOKEN_IF)) {
     return ifStatement();
   } else if (match(TokenType::TOKEN_WHILE)) {
     return whileStatement();
-  } else if (match(TokenType::TOKEN_LEFT_BRACE)){
+  } else if (match(TokenType::TOKEN_LEFT_BRACE)) {
     return block();
   } else {
     return expressionStatement();
   }
 }
 
-std::unique_ptr<Stmt> Parser::printStatement()
-{
-  std::unique_ptr<Expr> expr = expression();
+Stmt Parser::printStatement() {
+  Expr expr = expression();
 
   consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after expression");
 
-  return std::make_unique<PrintStmt>(std::move(expr));
+  return Stmt{std::make_unique<PrintStmt>(PrintStmt{std::move(expr)})};
 }
 
-std::unique_ptr<Stmt> Parser::ifStatement()
-{
+Stmt Parser::ifStatement() {
   consume(TokenType::TOKEN_LEFT_PAREN, "Expect '(' after 'if'");
 
-  std::unique_ptr<Expr> condition = expression();
+  Expr condition = expression();
 
   consume(TokenType::TOKEN_RIGHT_PAREN, "Expect ')' after 'if'");
 
-  std::unique_ptr<Stmt> thenBranch = statement();
+  Stmt thenBranch = statement();
 
-  std::unique_ptr<Stmt> elseBranch = nullptr;
-
+  Stmt elseBranch = Stmt{std::unique_ptr<ExprStmt>(nullptr)};
   if (check(TokenType::TOKEN_ELSE)) {
     match(TokenType::TOKEN_ELSE);
     elseBranch = statement();
   }
 
-  return std::make_unique<IfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
+  return Stmt{std::make_unique<IfStmt>(IfStmt{
+    std::move(condition), std::move(thenBranch), std::move(elseBranch)})};
 }
 
-std::unique_ptr<Stmt> Parser::whileStatement()
-{
+Stmt Parser::whileStatement() {
   consume(TokenType::TOKEN_LEFT_PAREN, "Exepct '(' after 'while'.");
 
-  std::unique_ptr<Expr> condition = expression();
+  Expr condition = expression();
 
   consume(TokenType::TOKEN_RIGHT_PAREN, "Exepct ')' after condition.");
 
-  std::unique_ptr<Stmt> whileStatament = statement();
+  Stmt whileStatament = statement();
 
-  return std::make_unique<WhileStmt>(std::move(condition), std::move(whileStatament));
+  return Stmt{std::make_unique<WhileStmt>(
+    WhileStmt{std::move(condition), std::move(whileStatament)})};
 }
 
-std::unique_ptr<Stmt> Parser::block()
-{
-  std::vector<std::unique_ptr<Stmt>> statements;
+Stmt Parser::block() {
+  std::vector<Stmt> statements;
 
   while (!check(TokenType::TOKEN_RIGHT_BRACE)) {
     statements.push_back(declaration());
@@ -169,46 +149,34 @@ std::unique_ptr<Stmt> Parser::block()
 
   consume(TokenType::TOKEN_RIGHT_BRACE, "Expect '}' after block declaration.");
 
-  return std::make_unique<BlockStmt>(std::move(statements));
+  return Stmt{std::make_unique<BlockStmt>(BlockStmt{std::move(statements)})};
 }
 
-std::unique_ptr<Stmt> Parser::expressionStatement()
-{
-  std::unique_ptr<Expr> expr = expression();
+Stmt Parser::expressionStatement() {
+  Expr expr = expression();
 
   consume(TokenType::TOKEN_SEMICOLON, "Expected ';' after expression.");
 
-  return std::make_unique<ExprStmt>(std::move(expr));
+  return Stmt{std::make_unique<ExprStmt>(ExprStmt{std::move(expr)})};
 }
 
-std::unique_ptr<Expr> Parser::expression()
-{
+Expr Parser::expression() {
   return parsePrecedence(Precedence::PREC_ASSIGNMENT);
 }
 
-std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence)
-{
+Expr Parser::parsePrecedence(Precedence precedence) {
   Token token = scanToken();
-  std::unique_ptr<Expr> lhs = parseNud(token);
+  Expr lhs = parseNud(token);
 
-  if (!lhs) {
-    return nullptr;
-  }
-
-  // while (precedence <= getPrecedence(peek()))
-  while (precedence <= getPrecedence(peek()) && getPrecedence(peek()) != Precedence::PREC_NONE)
-  {
+  while (precedence <= getPrecedence(peek()) &&
+    getPrecedence(peek()) != Precedence::PREC_NONE) {
     Token op = peek();
     advance();
 
     bool canAssign = precedence <= Precedence::PREC_ASSIGNMENT;
 
-    std::unique_ptr<Expr> rhs = parsePrecedence(
-        static_cast<Precedence>(static_cast<int>(getPrecedence(op)) + 1));
-
-    if (!rhs) {
-      return nullptr;
-    }
+    Expr rhs = parsePrecedence(
+      static_cast<Precedence>(static_cast<int>(getPrecedence(op)) + 1));
 
     lhs = parseLhs(canAssign, std::move(lhs), op.type, std::move(rhs));
   }
@@ -216,33 +184,32 @@ std::unique_ptr<Expr> Parser::parsePrecedence(Precedence precedence)
   return lhs;
 }
 
-std::unique_ptr<Expr> Parser::parseLhs(bool canAssign, std::unique_ptr<Expr> lhs, TokenType op, std::unique_ptr<Expr> rhs)
-{
-  if (op == TokenType::TOKEN_EQUAL)
-  {
+Expr Parser::parseLhs(bool canAssign, Expr lhs, TokenType op, Expr rhs) {
+  if (op == TokenType::TOKEN_EQUAL) {
     if (!canAssign)
       throw ParserError(previous, "Invalid assignment target.");
 
-    if (auto var = dynamic_cast<const NameExpr*>(lhs.get()))
-      return std::make_unique<AssignExpr>(var->getName(), std::move(rhs));
+    auto *namePtr = std::get_if<std::unique_ptr<NameExpr>>(&lhs);
+    if (namePtr && *namePtr)
+      return Expr{std::make_unique<AssignExpr>(
+        AssignExpr{(*namePtr)->name, std::move(rhs)})};
 
     throw ParserError(previous, "Invalid assignment target.");
   }
-  return std::make_unique<BinaryExpr>(std::move(lhs), op, std::move(rhs));
+  return Expr{std::make_unique<BinaryExpr>(
+    BinaryExpr{std::move(lhs), op, std::move(rhs)})};
 }
 
-std::unique_ptr<Expr> Parser::parseNud(const Token& token)
-{
-  switch (token.type)
-  {
+Expr Parser::parseNud(const Token &token) {
+  switch (token.type) {
     case TokenType::TOKEN_FALSE:
-      return std::make_unique<BooleanExpr>(false);
+      return Expr{std::make_unique<BooleanExpr>(BooleanExpr{false})};
 
     case TokenType::TOKEN_TRUE:
-      return std::make_unique<BooleanExpr>(true);
+      return Expr{std::make_unique<BooleanExpr>(BooleanExpr{true})};
 
     case TokenType::TOKEN_NIL:
-      return std::make_unique<LiteralExpr>(std::monostate{});
+      return Expr{std::make_unique<LiteralExpr>(LiteralExpr{std::monostate{}})};
 
     case TokenType::TOKEN_NUMBER: {
       Value value;
@@ -251,34 +218,34 @@ std::unique_ptr<Expr> Parser::parseNud(const Token& token)
       } else {
         value = std::stoi(token.lexeme);
       }
-      return std::make_unique<LiteralExpr>(value);
+      return Expr{std::make_unique<LiteralExpr>(LiteralExpr{value})};
     }
     case TokenType::TOKEN_STRING:
-      return std::make_unique<LiteralExpr>(token.lexeme);
+      return Expr{std::make_unique<LiteralExpr>(LiteralExpr{token.lexeme})};
 
     case TokenType::TOKEN_LEFT_PAREN: {
-      std::unique_ptr<Expr> expr = expression();
+      Expr expr = expression();
       consume(TokenType::TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
-      return std::make_unique<GroupingExpr>(std::move(expr));
+      return Expr{std::make_unique<GroupingExpr>(GroupingExpr{std::move(expr)})};
     }
 
     case TokenType::TOKEN_BANG:
     case TokenType::TOKEN_MINUS: {
-      TokenType op = token.type;
-      std::unique_ptr<Expr> right = parsePrecedence(Precedence::PREC_UNARY);
-      return std::make_unique<PrefixExpr>(op, std::move(right));
+      TokenType opType = token.type;
+      Expr right = parsePrecedence(Precedence::PREC_UNARY);
+      return Expr{
+        std::make_unique<PrefixExpr>(PrefixExpr{opType, std::move(right)})};
     }
 
     case TokenType::TOKEN_IDENTIFIER:
-      return std::make_unique<NameExpr>(token.lexeme);
+      return Expr{std::make_unique<NameExpr>(NameExpr{token.lexeme})};
 
     default:
       throw ParserError(token, "Unexpected expression.");
   }
 }
 
-Token Parser::scanToken()
-{
+Token Parser::scanToken() {
   if (currentIndex >= tokens.size()) {
     throw ParserError(current, "Expect right expression.");
     return tokens.back();
@@ -287,16 +254,14 @@ Token Parser::scanToken()
   return tokens[currentIndex++];
 }
 
-void Parser::advance()
-{
+void Parser::advance() {
   if (!isAtEnd()) {
     previous = current;
     current = scanToken();
   }
 }
 
-Token Parser::peek() const
-{
+Token Parser::peek() const {
   if (currentIndex >= tokens.size()) {
     return tokens.back();
   }
@@ -304,8 +269,7 @@ Token Parser::peek() const
   return tokens[currentIndex];
 }
 
-Token Parser::peekAhead() const
-{
+Token Parser::peekAhead() const {
   if (currentIndex >= tokens.size()) {
     return tokens.back();
   }
@@ -313,8 +277,7 @@ Token Parser::peekAhead() const
   return tokens[currentIndex + 1];
 }
 
-void Parser::error(Token token, const std::string& message)
-{
+void Parser::error(Token token, const std::string &message) {
   if (panicMode) {
     return;
   }
@@ -322,25 +285,19 @@ void Parser::error(Token token, const std::string& message)
   panicMode = true;
 
   std::string errorMsg = "[line " + std::to_string(current.line) + "] ";
-  if (token.type == TokenType::TOKEN_EOF)
-  {
+  if (token.type == TokenType::TOKEN_EOF) {
     std::cerr << errorMsg << "ParserError at end." << std::endl;
-  }
-  else if (token.type == TokenType::TOKEN_ERROR)
-  {
+  } else if (token.type == TokenType::TOKEN_ERROR) {
     // nothing
-  }
-  else
-  {
+  } else {
     std::cerr << errorMsg << "ParserError at '" + token.lexeme + "': " + message
-              << std::endl;
+      << std::endl;
   }
 
   hadError = true;
 }
 
-void Parser::consume(TokenType type, const std::string& message)
-{
+void Parser::consume(TokenType type, const std::string &message) {
   if (check(type)) {
     advance();
     return;
@@ -349,8 +306,7 @@ void Parser::consume(TokenType type, const std::string& message)
   throw ParserError(peek(), message.c_str());
 }
 
-bool Parser::match(TokenType type) 
-{
+bool Parser::match(TokenType type) {
   if (check(type)) {
     advance();
     return true;
@@ -361,8 +317,7 @@ bool Parser::match(TokenType type)
 
 bool Parser::isAtEnd() { return peek().type == TokenType::TOKEN_EOF; }
 
-bool Parser::check(TokenType type)
-{
+bool Parser::check(TokenType type) {
   if (isAtEnd()) {
     return false;
   }
@@ -370,18 +325,15 @@ bool Parser::check(TokenType type)
   return peek().type == type;
 }
 
-void Parser::synchronize()
-{
+void Parser::synchronize() {
   panicMode = false;
 
-  while (!isAtEnd())
-  {
+  while (!isAtEnd()) {
     if (current.type == TokenType::TOKEN_SEMICOLON) {
       return;
     }
 
-    switch (current.type)
-    {
+    switch (current.type) {
       case TokenType::TOKEN_CLASS:
       case TokenType::TOKEN_FUN:
       case TokenType::TOKEN_VAR:
