@@ -1,9 +1,10 @@
 #ifndef VAR_EXPR_H
 #define VAR_EXPR_H
 
-#include "expressions/Expr.h"
 #include <memory>
 #include <ostream>
+
+#include "frontend/ast/Expr.h"
 
 class VarExpr : public Expr {
 public:

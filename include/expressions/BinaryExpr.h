@@ -4,8 +4,8 @@
 #include <memory>
 #include <ostream>
 
-#include "TokenType.h"
-#include "expressions/Expr.h"
+#include "frontend/token/TokenType.h"
+#include "frontend/ast/Expr.h"
 
 class BinaryExpr : public Expr {
 public:

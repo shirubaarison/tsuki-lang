@@ -3,42 +3,8 @@
 
 #include <map>
 #include <vector>
-#include "Value.h"
-
-enum OpCode {
-  LOAD_CONSTANT,
-  RET,
-  ADD,
-  SUB,
-  MUL,
-  DIV,
-  PRINT,
-  POP,
-  EQUAL,
-  NOT_EQUAL,
-  NOT,
-  GREATER,
-  GREATER_EQUAL,
-  LESS,
-  LESS_EQUAL,
-  FALSE,
-  TRUE,
-  NIL,
-  DEFINE_GLOBAL,
-  GET_GLOBAL,
-  SET_GLOBAL,
-  DEFINE_LOCAL,
-  GET_LOCAL,
-  SET_LOCAL,
-  JMP_IF_FALSE,
-  JMP,
-  LOOP,
-};
-
-struct Instruction {
-  OpCode op;
-  Value operand;
-};
+#include "runtime/value/Value.h"
+#include "ir/Instruction.h"
 
 enum class InterpretResult {
   INTERPRET_OK,

@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "stmt/Stmt.h"
-#include "expressions/Expr.h"
+#include "frontend/ast/Expr.h"
+#include "frontend/ast/Stmt.h"
 
 class IfStmt : public Stmt {
 public:

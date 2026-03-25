@@ -1,9 +1,10 @@
 #ifndef BLOCK_STMT_H
 #define BLOCK_STMT_H
 
-#include "stmt/Stmt.h"
 #include <memory>
 #include <vector>
+
+#include "frontend/ast/Stmt.h"
 
 class BlockStmt : public Stmt {
 public:

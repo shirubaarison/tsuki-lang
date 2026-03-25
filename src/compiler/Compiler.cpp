@@ -1,8 +1,7 @@
-#include "Compiler.h"
+#include "compiler/Compiler.h"
 
-#include "TokenType.h"
-#include "VM/VM.h"
-#include "Value.h"
+#include "frontend/token/TokenType.h"
+#include "runtime/value/Value.h"
 #include "Visitor.h"
 
 #include "expressions/BinaryExpr.h"

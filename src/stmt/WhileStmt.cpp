@@ -1,6 +1,6 @@
 #include "stmt/WhileStmt.h"
 #include "Visitor.h"
-#include "expressions/Expr.h"
+#include "frontend/ast/Expr.h"
 
 WhileStmt::WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> statement)
     : mCondition(std::move(condition)), mStatement(std::move(statement)) {}

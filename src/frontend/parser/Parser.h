@@ -1,9 +1,10 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "Lexer.h"
-#include "expressions/Expr.h"
-#include "stmt/Stmt.h"
+#include "frontend/lexer/Lexer.h"
+#include "frontend/ast/Expr.h"
+#include "frontend/ast/Stmt.h"
+
 #include <memory>
 #include <vector>
 

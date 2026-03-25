@@ -1,0 +1,34 @@
+#ifndef OP_CODE_H
+#define OP_CODE_H
+
+enum OpCode {
+  LOAD_CONSTANT,
+  RET,
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  PRINT,
+  POP,
+  EQUAL,
+  NOT_EQUAL,
+  NOT,
+  GREATER,
+  GREATER_EQUAL,
+  LESS,
+  LESS_EQUAL,
+  FALSE,
+  TRUE,
+  NIL,
+  DEFINE_GLOBAL,
+  GET_GLOBAL,
+  SET_GLOBAL,
+  DEFINE_LOCAL,
+  GET_LOCAL,
+  SET_LOCAL,
+  JMP_IF_FALSE,
+  JMP,
+  LOOP,
+};
+
+#endif // !OP_CODE_H

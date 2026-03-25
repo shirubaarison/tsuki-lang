@@ -1,5 +1,5 @@
-#include "Lexer.h"
-#include "TokenType.h"
+#include "frontend/lexer/Lexer.h"
+#include "frontend/token/TokenType.h"
 #include <catch2/catch_test_macros.hpp>
 
 static std::vector<Token> lex(std::string src)

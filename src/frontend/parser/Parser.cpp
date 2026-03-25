@@ -1,29 +1,28 @@
-#include "Parser.h"
+#include "frontend/parser/Parser.h"
 
 #include <iostream>
 #include <memory>
 #include <string>
 #include <variant>
 
-#include "Lexer.h"
-#include "TokenType.h"
+#include "frontend/lexer/Lexer.h"
+#include "frontend/token/TokenType.h"
 
-#include "Value.h"
+#include "runtime/value/Value.h"
 #include "stmt/ExprStmt.h"
 #include "stmt/PrintStmt.h"
 #include "stmt/IfStmt.h"
 #include "stmt/BlockStmt.h"
 #include "stmt/WhileStmt.h"
 
+#include "frontend/ast/Expr.h"
 #include "expressions/BinaryExpr.h"
 #include "expressions/AssignExpr.h"
 #include "expressions/BooleanExpr.h"
-#include "expressions/Expr.h"
 #include "expressions/GroupingExpr.h"
 #include "expressions/LiteralExpr.h"
 #include "expressions/NameExpr.h"
 #include "expressions/PrefixExpr.h"
-#include "expressions/VarExpr.h"
 
 namespace {
   inline Parser::Precedence getPrecedence(Token op)

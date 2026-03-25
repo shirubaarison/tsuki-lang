@@ -1,8 +1,8 @@
 #ifndef NAME_EXPR_H
 #define NAME_EXPR_H
 
-#include "expressions/Expr.h"
 #include <ostream>
+#include "frontend/ast/Expr.h"
 
 class NameExpr : public Expr {
 public:

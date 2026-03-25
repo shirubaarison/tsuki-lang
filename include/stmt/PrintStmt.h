@@ -1,9 +1,10 @@
 #ifndef PRINT_STMT_H
 #define PRINT_STMT_H
 
-#include "expressions/Expr.h"
-#include "stmt/Stmt.h"
 #include <memory>
+
+#include "frontend/ast/Expr.h"
+#include "frontend/ast/Stmt.h"
 
 class PrintStmt : public Stmt {
 public:

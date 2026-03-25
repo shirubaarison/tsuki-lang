@@ -1,6 +1,6 @@
 #include "stmt/PrintStmt.h"
 #include "Visitor.h"
-#include "expressions/Expr.h"
+#include "frontend/ast/Expr.h"
 
 PrintStmt::PrintStmt(std::unique_ptr<Expr> expr) : mExpr(std::move(expr)) {}
 

@@ -1,10 +1,9 @@
-#include "VM/Debug.h"
+#include "tools/debug/Debug.h"
 #include <iomanip>
 #include <iostream>
 #include <variant>
 
-#include "VM/VM.h"
-#include "Value.h"
+#include "runtime/value/Value.h"
 
 void disassembleChunk(const std::vector<Instruction>& code, const char* name)
 {

@@ -1,10 +1,11 @@
 #ifndef PREFIX_EXPR_H
 #define PREFIX_EXPR_H
 
-#include "TokenType.h"
-#include "expressions/Expr.h"
 #include <memory>
 #include <ostream>
+
+#include "frontend/token/TokenType.h"
+#include "frontend/ast/Expr.h"
 
 class PrefixExpr : public Expr {
 public:

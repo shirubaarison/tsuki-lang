@@ -1,9 +1,10 @@
 #ifndef GROUPING_EXPR_H
 #define GROUPING_EXPR_H
 
-#include "expressions/Expr.h"
 #include <memory>
 #include <ostream>
+
+#include "frontend/ast/Expr.h"
 
 class GroupingExpr : public Expr {
 public:

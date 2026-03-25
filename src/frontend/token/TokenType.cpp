@@ -1,4 +1,4 @@
-#include "TokenType.h"
+#include "frontend/token/TokenType.h"
 
 const char* tokenToOperator(TokenType type) {
   switch (type) {

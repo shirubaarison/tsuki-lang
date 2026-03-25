@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "TokenType.h"
+#include "frontend/token/TokenType.h"
 
 const char *tokenToOperator(TokenType type);
 const char *tokenTypeToString(TokenType type);

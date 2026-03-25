@@ -1,5 +1,6 @@
 #include "expressions/BinaryExpr.h"
-#include "TokenType.h"
+
+#include "frontend/token/TokenType.h"
 #include "Visitor.h"
 
 BinaryExpr::BinaryExpr(std::unique_ptr<Expr> left, TokenType op,

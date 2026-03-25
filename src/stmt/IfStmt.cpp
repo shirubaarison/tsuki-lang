@@ -1,6 +1,6 @@
 #include "stmt/IfStmt.h"
 #include "Visitor.h"
-#include "expressions/Expr.h"
+#include "frontend/ast/Expr.h"
 
 IfStmt::IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> thenBranch,
                std::unique_ptr<Stmt> elseBranch)

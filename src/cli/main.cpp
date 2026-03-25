@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "Compiler.h"
-#include "Lexer.h"
-#include "Parser.h"
-#include "VM/Debug.h"
-#include "VM/VM.h"
+#include "compiler/Compiler.h"
+#include "frontend/lexer/Lexer.h"
+#include "frontend/parser/Parser.h"
+#include "tools/debug/Debug.h"
+#include "runtime/vm/VM.h"
 
 #define VERSION "0.0.1"
 

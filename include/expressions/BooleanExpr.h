@@ -1,9 +1,11 @@
 #ifndef BOOLEAN_EXPR_H
 #define BOOLEAN_EXPR_H
 
-#include "Value.h"
-#include "expressions/Expr.h"
 #include <ostream>
+
+#include "runtime/value/Value.h"
+#include "frontend/ast/Expr.h"
+
 class BooleanExpr : public Expr {
 public:
   BooleanExpr(Value value);

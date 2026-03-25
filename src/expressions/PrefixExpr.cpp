@@ -1,5 +1,5 @@
 #include "expressions/PrefixExpr.h"
-#include "TokenType.h"
+#include "frontend/token/TokenType.h"
 #include "Visitor.h"
 
 PrefixExpr::PrefixExpr(TokenType op, std::unique_ptr<Expr> expr)

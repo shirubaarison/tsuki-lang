@@ -1,4 +1,4 @@
-#include "VM/VM.h"
+#include "runtime/vm/VM.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -6,8 +6,8 @@
 #include <variant>
 #include <vector>
 
-#include "VM/Debug.h"
-#include "Value.h"
+#include "tools/debug/Debug.h"
+#include "runtime/value/Value.h"
 
 namespace {
 bool isTruthy(Value value)

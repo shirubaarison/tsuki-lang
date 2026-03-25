@@ -1,9 +1,10 @@
 #ifndef LITERAL_EXPR_H
 #define LITERAL_EXPR_H
 
-#include "Value.h"
-#include "expressions/Expr.h"
 #include <ostream>
+
+#include "frontend/ast/Expr.h"
+#include "runtime/value/Value.h"
 
 class LiteralExpr : public Expr {
 public:

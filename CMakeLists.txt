@@ -8,11 +8,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE SRCFILES CONFIGURE_DEPENDS "src/*.cpp")
-list(FILTER SRCFILES EXCLUDE REGEX "src/main.cpp$")
+list(FILTER SRCFILES EXCLUDE REGEX "src/cli/main.cpp$")
 add_library(tsuki_core ${SRCFILES})
 target_include_directories(tsuki_core PUBLIC include)
+target_include_directories(tsuki_core
+    PUBLIC ${PROJECT_SOURCE_DIR}/src
+)
 
-add_executable(TsukiLang src/main.cpp)
+add_executable(TsukiLang src/cli/main.cpp)
 target_link_libraries(TsukiLang PRIVATE tsuki_core PkgConfig::READLINE)
 
 find_package(PkgConfig REQUIRED)

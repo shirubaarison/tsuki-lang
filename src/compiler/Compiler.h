@@ -1,11 +1,13 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
-#include "VM/VM.h"
 #include "Visitor.h"
-#include "stmt/Stmt.h"
+#include "frontend/ast/Stmt.h"
+#include "ir/Instruction.h"
 
 #include <memory>
+
+#include <vector>
 
 struct Local {
   std::string name;
