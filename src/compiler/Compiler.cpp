@@ -192,9 +192,9 @@ void Compiler::compileStmt(const Stmt &stmt) {
     },
     [&](const std::unique_ptr<IfStmt> &s) {
       compileExpr(s->condition);
-      emit(OpCode::POP);
 
       std::size_t jumpToElse = emit(OpCode::JMP_IF_FALSE);
+      emit(OpCode::POP);
       compileStmt(s->thenBranch);
 
       bool hasElse = std::visit(
