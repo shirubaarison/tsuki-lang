@@ -35,67 +35,80 @@ using Stmt = std::variant<std::unique_ptr<PrintStmt>,
                           std::unique_ptr<BlockStmt>, std::unique_ptr<ExprStmt>,
                           std::unique_ptr<IfStmt>, std::unique_ptr<WhileStmt>>;
 
-struct BinaryExpr {
+struct BinaryExpr
+{
   Expr left;
   TokenType op;
   Expr right;
 };
 
-struct LiteralExpr {
+struct LiteralExpr
+{
   Value value;
 };
 
-struct AssignExpr {
+struct AssignExpr
+{
   std::string name;
   Expr expr;
 };
 
-struct BooleanExpr {
+struct BooleanExpr
+{
   bool value;
 };
 
-struct GroupingExpr {
+struct GroupingExpr
+{
   Expr expr;
 };
 
-struct NameExpr {
+struct NameExpr
+{
   std::string name;
 };
 
-struct PrefixExpr {
+struct PrefixExpr
+{
   TokenType op;
   Expr expr;
 };
 
-struct VarExpr {
+struct VarExpr
+{
   std::string name;
   Expr rhs;
 };
 
-struct PrintStmt {
+struct PrintStmt
+{
   Expr expr;
 };
 
-struct BlockStmt {
+struct BlockStmt
+{
   std::vector<Stmt> statements;
 };
 
-struct ExprStmt {
+struct ExprStmt
+{
   Expr expr;
 };
 
-struct IfStmt {
+struct IfStmt
+{
   Expr condition;
   Stmt thenBranch;
   Stmt elseBranch;
 };
 
-struct WhileStmt {
+struct WhileStmt
+{
   Expr condition;
   Stmt body;
 };
 
-void printExpr(std::ostream &out, const Expr &expr);
-void printStmt(std::ostream &out, const Stmt &stmt);
+void printExpr(std::ostream& out, const Expr& expr);
+void printStmt(std::ostream& out, const Stmt& stmt);
 
 #endif // !AST_H

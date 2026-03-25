@@ -12,9 +12,9 @@ Compiler::Compiler() {}
 
 CompilerError::CompilerError(std::string m) : m_msg(std::move(m)) {}
 
-const char *CompilerError::what() const noexcept { return m_msg.c_str(); }
+const char* CompilerError::what() const noexcept { return m_msg.c_str(); }
 
-void Compiler::error(const std::string& msg) 
+void Compiler::error(const std::string& msg)
 {
   std::cerr << "CompilerError: " << msg << std::endl;
 }

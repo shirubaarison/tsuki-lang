@@ -48,8 +48,8 @@ private:
   bool match(TokenType type);
 
   void advance();
-  void consume(TokenType type, const std::string &message);
-  void error(Token token, const std::string &message);
+  void consume(TokenType type, const std::string& message);
+  void error(Token token, const std::string& message);
 
   Stmt declaration();
   Stmt statement();
@@ -62,9 +62,8 @@ private:
   Expr parsePrecedence(Precedence precedence);
 
   Expr expression();
-  Expr parseNud(const Token &token);
+  Expr parseNud(const Token& token);
   Expr parseLhs(bool canAssign, Expr lhs, TokenType op, Expr rhs);
-  Expr parseBinary(const Token &token);
 
   void synchronize();
 };
@@ -72,7 +71,7 @@ private:
 class ParserError : public std::exception {
 public:
   ParserError(Token token, std::string m);
-  const char *what() const noexcept override;
+  const char* what() const noexcept override;
   const Token getToken() const;
 
 private:

@@ -5,6 +5,33 @@
 
 #include "runtime/value/Value.h"
 
+namespace {
+  size_t simpleInstruction(const char* name, size_t offset)
+  {
+    std::cout << name << "\n";
+
+    return offset + 1;
+  }
+
+  size_t constantInstruction(const char* name, const Chunk& chunk, size_t offset)
+  {
+    Byte constantIdx = chunk.code[offset + 1];
+    std::cout << std::setw(16) << std::setfill(' ') << std::left << name;
+    std::visit(ValuePrinter{}, chunk.constants[constantIdx]);
+    std::cout << "\n";
+
+    return offset + 2;
+  }
+
+  size_t jumpInstruction(const char* name, int sign, const Chunk& chunk, size_t offset)
+  {
+    Byte jump = chunk.code[offset + 1];
+    std::cout << name << " " << offset << " -> " << (offset + 2 + sign * jump) << "\n";
+
+    return offset + 2;
+  }
+}
+
 void disassembleChunk(const Chunk& chunk, const char* name)
 {
   std::cout << name << ":\n";
@@ -12,28 +39,6 @@ void disassembleChunk(const Chunk& chunk, const char* name)
   for (size_t offset = 0; offset < chunk.code.size();) {
     offset = disassembleInstruction(chunk, offset);
   }
-}
-
-static size_t simpleInstruction(const char* name, size_t offset)
-{
-  std::cout << name << "\n";
-  return offset + 1;
-}
-
-static size_t constantInstruction(const char* name, const Chunk& chunk, size_t offset)
-{
-  Byte constantIdx = chunk.code[offset + 1];
-  std::cout << std::setw(16) << std::setfill(' ') << std::left << name;
-  std::visit(ValuePrinter{}, chunk.constants[constantIdx]);
-  std::cout << "\n";
-  return offset + 2;
-}
-
-static size_t jumpInstruction(const char* name, int sign, const Chunk& chunk, size_t offset)
-{
-  Byte jump = chunk.code[offset + 1];
-  std::cout << name << " " << offset << " -> " << (offset + 2 + sign * jump) << "\n";
-  return offset + 2;
 }
 
 size_t disassembleInstruction(const Chunk& chunk, size_t offset)
@@ -127,5 +132,6 @@ size_t disassembleInstruction(const Chunk& chunk, size_t offset)
   }
 
   std::cout << "Unknown opcode " << static_cast<int>(op) << "\n";
+
   return offset + 1;
 }
