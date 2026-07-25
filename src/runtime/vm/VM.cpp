@@ -185,8 +185,16 @@ InterpretResult VM::Machine::run() {
         binaryCompare(stack, [](Value a, Value b){ return a < b; });
         break;
 
+      case OpCode::LESS_EQUAL:
+        binaryCompare(stack, [](Value a, Value b) { return a <= b; });
+        break;
+
       case OpCode::GREATER:
         binaryCompare(stack, [](Value a, Value b){ return a > b; });
+        break;
+
+      case OpCode::GREATER_EQUAL:
+        binaryCompare(stack, [](Value a, Value b) { return a >= b; });
         break;
 
       case OpCode::DEFINE_GLOBAL: {
