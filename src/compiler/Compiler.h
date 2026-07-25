@@ -1,25 +1,21 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
+#include "compiler/SymbolTable.h"
 #include "frontend/ast/Ast.h"
 #include "ir/Chunk.h"
 
 #include <vector>
 
-struct Local {
-  std::string name;
-  int depth;
-};
-
 class Compiler {
+public:
+  Compiler();
+  Chunk compile(std::vector<Stmt> syntaxTree);
+
 private:
   Chunk m_chunk;
+  SymbolTable symbolTable;
   std::vector<Stmt> m_syntaxTree;
-  std::vector<Local> m_locals;
-  std::vector<std::string> m_globals;
-
-  int m_localCount = 0;
-  int m_scopeDepth = 0;
 
   size_t emit(OpCode op);
   size_t emit(OpCode op, const Value& value);
@@ -28,21 +24,22 @@ private:
   size_t emitJump(OpCode op);
   void patchJump(int jumpPos);
 
-  int resolveLocal(const std::string &name);
-  int resolveGlobal(const std::string &name);
-
-  void addLocal(const std::string& name);
-  void addGlobal(const std::string& name);
-  void error(const std::string& name);
-  void beginScope();
-  void endScope();
-
   void compileExpr(const Expr& expr);
-  void compileStmt(const Stmt& stmt);
+  void compileExpr(const BinaryExpr& expr);
+  void compileExpr(const AssignExpr& expr);
+  void compileExpr(const GroupingExpr& expr);
+  void compileExpr(const PrefixExpr& expr);
+  void compileExpr(const LiteralExpr& expr);
+  void compileExpr(const BooleanExpr& expr);
+  void compileExpr(const NameExpr& expr);
+  void compileExpr(const VarExpr& expr);
 
-public:
-  Compiler();
-  Chunk compile(std::vector<Stmt> syntaxTree);
+  void compileStmt(const Stmt& stmt);
+  void compileStmt(const PrintStmt& stmt);
+  void compileStmt(const BlockStmt& stmt);
+  void compileStmt(const IfStmt& stmt);
+  void compileStmt(const ExprStmt& stmt);
+  void compileStmt(const WhileStmt& stmt);
 };
 
 class CompilerError : public std::exception {

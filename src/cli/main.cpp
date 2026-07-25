@@ -51,8 +51,17 @@ void run(std::string &source) {
     }
     std::cout << std::endl;
   }
+  Chunk bytecode;
 
-  Chunk bytecode = compiler.compile(std::move(syntaxTree));
+  try
+  {
+    bytecode = compiler.compile(std::move(syntaxTree));
+  }
+  catch (const CompilerError& e)
+  {
+    std::cerr << e.what() << '\n';
+    return;
+  }
 
   if (isInDebugMode) {
     disassembleChunk(bytecode, "_main");
