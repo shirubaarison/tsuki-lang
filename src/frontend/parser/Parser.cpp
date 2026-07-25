@@ -121,18 +121,18 @@ Stmt Parser::printStatement()
 {
   Expr expr = expression();
 
-  consume(TokenType::TOKEN_SEMICOLON, "Expect ';' after expression");
+  consume(TokenType::TOKEN_SEMICOLON, "expected ';' after expression");
 
   return Stmt{std::make_unique<PrintStmt>(PrintStmt{std::move(expr)})};
 }
 
 Stmt Parser::ifStatement()
 {
-  consume(TokenType::TOKEN_LEFT_PAREN, "Expect '(' after 'if'");
+  consume(TokenType::TOKEN_LEFT_PAREN, "expected '(' after 'if'");
 
   Expr condition = expression();
 
-  consume(TokenType::TOKEN_RIGHT_PAREN, "Expect ')' after 'if'");
+  consume(TokenType::TOKEN_RIGHT_PAREN, "expected ')' after 'if'");
 
   Stmt thenBranch = statement();
 
@@ -165,11 +165,11 @@ Stmt Parser::block()
 {
   std::vector<Stmt> statements;
 
-  while (!check(TokenType::TOKEN_RIGHT_BRACE)) {
+  while (!check(TokenType::TOKEN_RIGHT_BRACE) && !isAtEnd()) {
     statements.push_back(declaration());
   }
 
-  consume(TokenType::TOKEN_RIGHT_BRACE, "Expect '}' after block declaration.");
+  consume(TokenType::TOKEN_RIGHT_BRACE, "expected '}' after block declaration.");
 
   return Stmt{std::make_unique<BlockStmt>(BlockStmt{std::move(statements)})};
 }
@@ -178,7 +178,7 @@ Stmt Parser::expressionStatement()
 {
   Expr expr = expression();
 
-  consume(TokenType::TOKEN_SEMICOLON, "Expected ';' after expression.");
+  consume(TokenType::TOKEN_SEMICOLON, "expected ';' after expression.");
 
   return Stmt{std::make_unique<ExprStmt>(ExprStmt{std::move(expr)})};
 }
@@ -214,14 +214,14 @@ Expr Parser::parseLhs(bool canAssign, Expr lhs, TokenType op, Expr rhs)
   if (op == TokenType::TOKEN_EQUAL)
   {
     if (!canAssign)
-      throw ParserError(previous, "Invalid assignment target.");
+      throw ParserError(previous, "invalid assignment target.");
 
     auto *namePtr = std::get_if<std::unique_ptr<NameExpr>>(&lhs);
     if (namePtr && *namePtr)
       return Expr{std::make_unique<AssignExpr>(
         AssignExpr{(*namePtr)->name, std::move(rhs)})};
 
-    throw ParserError(previous, "Invalid assignment target.");
+    throw ParserError(previous, "invalid assignment target.");
   }
   return Expr{std::make_unique<BinaryExpr>(
     BinaryExpr{std::move(lhs), op, std::move(rhs)})};
@@ -256,7 +256,7 @@ Expr Parser::parseNud(const Token& token)
     case TokenType::TOKEN_LEFT_PAREN:
     {
       Expr expr = expression();
-      consume(TokenType::TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+      consume(TokenType::TOKEN_RIGHT_PAREN, "expected ')' after expression.");
 
       return Expr{std::make_unique<GroupingExpr>(GroupingExpr{std::move(expr)})};
     }
@@ -275,7 +275,7 @@ Expr Parser::parseNud(const Token& token)
       return Expr{std::make_unique<NameExpr>(NameExpr{token.lexeme})};
 
     default:
-      throw ParserError(token, "Unexpected expression.");
+      throw ParserError(token, "unexpected expression.");
   }
 }
 
@@ -283,7 +283,7 @@ Token Parser::scanToken()
 {
   if (currentIndex >= tokens.size())
   {
-    throw ParserError(current, "Expect right expression.");
+    throw ParserError(current, "expected right expression.");
     return tokens.back();
   }
 
@@ -325,7 +325,7 @@ void Parser::error(Token token, const std::string& message)
   std::string errorMsg = "[line " + std::to_string(current.line) + "] ";
   if (token.type == TokenType::TOKEN_EOF)
   {
-    std::cerr << errorMsg << "ParserError at end." << std::endl;
+    std::cerr << errorMsg << "Error at end: " << message << std::endl;
   }
   else if (token.type == TokenType::TOKEN_ERROR)
   {
@@ -333,7 +333,7 @@ void Parser::error(Token token, const std::string& message)
   }
   else
   {
-    std::cerr << errorMsg << "ParserError at '" + token.lexeme + "': " + message
+    std::cerr << errorMsg << "Error at '" + token.lexeme + "': " + message
       << std::endl;
   }
 
