@@ -28,6 +28,10 @@ bool isType(const Value& value) { return std::holds_alternative<T>(value); }
 template <typename Op>
 void binaryCompare(std::vector<Value>& stack, Op op) 
 {
+  if (stack.size() < 2) {
+    throw std::runtime_error("stack underflow.");
+  }
+
   Value b = stack.back();
   stack.pop_back();
   Value a = stack.back();
@@ -81,202 +85,293 @@ void VM::Machine::setByteCode(const Chunk& bytecode)
 }
 
 Byte VM::Machine::readByte() {
+  if (ip >= chunk.code.size()) {
+    throw std::runtime_error("unexpected end of bytecode.");
+  }
+
   return chunk.code[ip++];
 }
 
+InterpretResult VM::Machine::runtimeError(const std::string& message) {
+  std::cerr << "Runtime error at byte " << ip << ": " << message << std::endl;
+  return InterpretResult::INTERPRET_RUNTIME_ERROR;
+}
+
 Value VM::Machine::readConstant() {
-  return chunk.constants[readByte()];
+  Byte index = readByte();
+  if (index >= chunk.constants.size()) {
+    throw std::runtime_error("constant index " + std::to_string(index) + " is out of range.");
+  }
+  return chunk.constants[index];
 }
 
 InterpretResult VM::Machine::run() {
-  for (;;) {
+  try {
+    for (;;) {
 
-    if (debugMode)
-    {
-      std::cout << "       stack ";
-      if (stack.empty()) {
-        std::cout << "[ ]";
-      }
-      for (const auto &val : stack) {
-        std::cout << "[ ";
-        std::visit(ValuePrinter{}, val);
-        std::cout << " ]";
-      }
-      std::cout << std::endl;
-      std::cout << "       globals ";
-      if (globals.empty()) {
-        std::cout << "[ ]";
-      }
-      for (auto it = globals.cbegin(); it != globals.cend(); ++it) {
-        std::cout << "[ ";
-        std::cout << it->first << " : ";
-        std::visit(ValuePrinter{}, it->second);
-        std::cout << " ]";
-      }
-      std::cout << std::endl;
-
-      disassembleInstruction(chunk, ip);
-    }
-
-    OpCode instruction = static_cast<OpCode>(readByte());
-
-    switch (instruction)
-    {
-      case OpCode::LOAD_CONSTANT: {
-        Value constant = readConstant();
-        stack.push_back(constant);
-        break;
-      }
-
-      case OpCode::ADD:
-      case OpCode::SUB:
-      case OpCode::MUL:
-      case OpCode::DIV:
-        calculate(stack, instruction);
-        break;
-
-      case OpCode::POP: {
+      if (debugMode)
+      {
+        std::cout << "       stack ";
         if (stack.empty()) {
-          std::cout << "Stack is empty" << std::endl;
-        } else {
+          std::cout << "[ ]";
+        }
+        for (const auto &val : stack) {
+          std::cout << "[ ";
+          std::visit(ValuePrinter{}, val);
+          std::cout << " ]";
+        }
+        std::cout << std::endl;
+        std::cout << "       globals ";
+        if (globals.empty()) {
+          std::cout << "[ ]";
+        }
+        for (auto it = globals.cbegin(); it != globals.cend(); ++it) {
+          std::cout << "[ ";
+          std::cout << it->first << " : ";
+          std::visit(ValuePrinter{}, it->second);
+          std::cout << " ]";
+        }
+        std::cout << std::endl;
+
+        disassembleInstruction(chunk, ip);
+      }
+
+      OpCode instruction = static_cast<OpCode>(readByte());
+
+      switch (instruction)
+      {
+        case OpCode::LOAD_CONSTANT: {
+          Value constant = readConstant();
+          stack.push_back(constant);
+          break;
+        }
+
+        case OpCode::ADD:
+        case OpCode::SUB:
+        case OpCode::MUL:
+        case OpCode::DIV:
+          if (stack.size() < 2) {
+            return runtimeError("stack underflow.");
+          }
+          calculate(stack, instruction);
+          break;
+
+        case OpCode::POP: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          } else {
+            stack.pop_back();
+          }
+          break;
+        }
+
+        case OpCode::PRINT: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
+
+          Value value = stack.back();
           stack.pop_back();
-        }
-        break;
-      }
 
-      case OpCode::PRINT: {
-        if (stack.empty()) {
-          return InterpretResult::INTERPRET_RUNTIME_ERROR;
+          std::visit(ValuePrinter{}, value);
+          std::cout << "\n";
+          break;
         }
 
-        Value value = stack.back();
-        stack.pop_back();
+        case OpCode::NOT: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
 
-        std::visit(ValuePrinter{}, value);
-        std::cout << "\n";
-        break;
-      }
+          Value value = stack.back();
+          stack.pop_back();
 
-      case OpCode::NOT: {
-        Value value = stack.back();
-        stack.pop_back();
+          stack.push_back(!isTruthy(value));
+          break;
+        }
 
-        stack.push_back(!isTruthy(value));
-        break;
-      }
+        case OpCode::TRUE:
+          stack.push_back(true);
+          break;
 
-      case OpCode::TRUE:
-        stack.push_back(true);
-        break;
+        case OpCode::FALSE:
+          stack.push_back(false);
+          break;
 
-      case OpCode::FALSE:
-        stack.push_back(false);
-        break;
+        case OpCode::EQUAL:
+          binaryCompare(stack, [](Value a, Value b){ return a == b; });
+          break;
 
-      case OpCode::EQUAL:
-        binaryCompare(stack, [](Value a, Value b){ return a == b; });
-        break;
+        case OpCode::NOT_EQUAL:
+          binaryCompare(stack, [](Value a, Value b) { return a != b; });
+          break;
 
-      case OpCode::NOT_EQUAL:
-        binaryCompare(stack, [](Value a, Value b) { return a != b; });
-        break;
+        case OpCode::LESS:
+          binaryCompare(stack, [](Value a, Value b){ return a < b; });
+          break;
 
-      case OpCode::LESS:
-        binaryCompare(stack, [](Value a, Value b){ return a < b; });
-        break;
+        case OpCode::LESS_EQUAL:
+          binaryCompare(stack, [](Value a, Value b) { return a <= b; });
+          break;
 
-      case OpCode::LESS_EQUAL:
-        binaryCompare(stack, [](Value a, Value b) { return a <= b; });
-        break;
+        case OpCode::GREATER:
+          binaryCompare(stack, [](Value a, Value b){ return a > b; });
+          break;
 
-      case OpCode::GREATER:
-        binaryCompare(stack, [](Value a, Value b){ return a > b; });
-        break;
+        case OpCode::GREATER_EQUAL:
+          binaryCompare(stack, [](Value a, Value b) { return a >= b; });
+          break;
 
-      case OpCode::GREATER_EQUAL:
-        binaryCompare(stack, [](Value a, Value b) { return a >= b; });
-        break;
+        case OpCode::DEFINE_GLOBAL: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
 
-      case OpCode::DEFINE_GLOBAL: {
-        auto name = std::get<std::string>(readConstant());
-        globals[name] = stack.back();
-        break;
-      }
+          Value constant = readConstant();
+          if (!std::holds_alternative<std::string>(constant)) {
+            return runtimeError("DEFINE_GLOBAL requires a string constant.");
+          }
 
-      case OpCode::GET_GLOBAL: {
-        auto it = globals.find(std::get<std::string>(readConstant()));
+          auto name = std::get<std::string>(constant);
+          globals[name] = stack.back();
+          break;
+        }
 
-        if (it != globals.end()) {
+        case OpCode::GET_GLOBAL: {
+          Value constant = readConstant();
+
+          if (!std::holds_alternative<std::string>(constant)) {
+            return runtimeError("GET_GLOBAL requires a string constant.");
+          }
+
+          const auto& name = std::get<std::string>(constant);
+          auto it = globals.find(name);
+
+          if (it == globals.end()) {
+            return runtimeError("variable not found.");
+          }
+
           stack.push_back(it->second);
           break;
         }
 
-        std::cerr << "Variable not found." << std::endl;
-        return InterpretResult::INTERPRET_RUNTIME_ERROR;
-      }
+        case OpCode::SET_GLOBAL: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
 
-      case OpCode::SET_GLOBAL: {
-        const Value& value { stack.back() };
-        auto name = std::get<std::string>(readConstant());
-        globals[name] = value;
-        break;
-      }
+          const Value& value { stack.back() };
+          Value constant = readConstant();
+          if (!std::holds_alternative<std::string>(constant)) {
+            return runtimeError("SET_GLOBAL requires a string constant.");
+          }
 
-      case OpCode::DUP: {
-        stack.push_back(stack.back());
-        break;
-      }
+          auto name = std::get<std::string>(constant);
+          globals[name] = value;
+          break;
+        }
 
-      case OpCode::GET_LOCAL: {
-        int slot = std::get<int>(readConstant());
-        stack.push_back(stack[slot]);
-        break;
-      }
+        case OpCode::DUP: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
 
-      case OpCode::SET_LOCAL: {
-        int slot = std::get<int>(readConstant());
-        stack[slot] = stack.back();
-        break;
-      }
+          stack.push_back(stack.back());
+          break;
+        }
 
-      case OpCode::JMP_IF_FALSE: {
-        int offset = static_cast<int>(readByte());
-        Value var { stack.back() };
+        case OpCode::GET_LOCAL: {
+          Value constant = readConstant();
+          if (!std::holds_alternative<int>(constant)) {
+            return runtimeError("GET_LOCAL requires a integer constant.");
+          }
 
-        if (!isTruthy(var)) {
+          int slot = std::get<int>(constant);
+          if (slot < 0 || static_cast<size_t>(slot) >= stack.size()) {
+            return runtimeError("Local slot out of range.");
+          }
+
+          stack.push_back(stack[slot]);
+          break;
+        }
+
+        case OpCode::SET_LOCAL: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
+          Value constant = readConstant();
+          if (!std::holds_alternative<int>(constant)) {
+            return runtimeError("SET_LOCAL requires a integer constant.");
+          }
+
+          int slot = std::get<int>(constant);
+          if (slot < 0 || static_cast<size_t>(slot) >= stack.size()) {
+            return runtimeError("Local slot out of range.");
+          }
+
+          stack[slot] = stack.back();
+          break;
+        }
+
+        case OpCode::JMP_IF_FALSE: {
+          const std::size_t offset = readByte();
+
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
+
+          if (!isTruthy(stack.back())) {
+            if (offset > chunk.code.size() - ip) {
+              return runtimeError("invalid jump offset.");
+            }
+            ip += offset;
+          }
+
+          break;
+        }
+
+        case OpCode::JMP: {
+          const std::size_t offset = readByte();
+          if (offset > chunk.code.size() - ip) {
+            return runtimeError("invalid jump offset.");
+          }
+
           ip += offset;
+          break;
         }
 
-        break;
-      }
+        case OpCode::LOOP: {
+          const std::size_t offset = readByte();
+          if (offset > ip) {
+            return runtimeError("invalid loop offset.");
+          }
 
-      case OpCode::JMP: {
-        int offset = static_cast<int>(readByte());
-        ip += offset;
-        break;
-      }
-
-      case OpCode::LOOP: {
-        int offset = static_cast<int>(readByte());
-        ip -= offset;
-        break;
-      }
-
-      case OpCode::NEGATE: {
-        Value& value = stack.back();
-        if (!isType<int>(value)) {
-          throw std::runtime_error("Value is not a number.");
+          ip -= offset;
+          break;
         }
 
-        value = -(std::get<int>(value));
-        break;
+        case OpCode::NEGATE: {
+          if (stack.empty()) {
+            return runtimeError("stack is empty.");
+          }
+
+          Value& value = stack.back();
+          if (!isType<int>(value)) {
+            return runtimeError("value is not a number.");
+          }
+
+          value = -(std::get<int>(value));
+          break;
+        }
+
+        case OpCode::RET:
+          return InterpretResult::INTERPRET_OK;
+
+        default:
+          return runtimeError("unknown opcode.");
       }
-
-      case OpCode::RET:
-        return InterpretResult::INTERPRET_OK;
-
-      default:
-        return InterpretResult::INTERPRET_RUNTIME_ERROR;
     }
+  } catch (const std::runtime_error& e) {
+    return runtimeError(e.what());
   }
 }

@@ -24,7 +24,7 @@ private:
 
   Byte readByte();
   Value readConstant();
-
+  InterpretResult runtimeError(const std::string& message);
 public:
   Machine();
   InterpretResult run();
