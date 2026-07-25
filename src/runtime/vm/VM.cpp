@@ -208,14 +208,14 @@ InterpretResult VM::Machine::run() {
       }
 
       case OpCode::SET_GLOBAL: {
-        Value var { stack.back() };
-        stack.pop_back();
+        const Value& value { stack.back() };
         auto name = std::get<std::string>(readConstant());
-        globals[name] = var;
+        globals[name] = value;
         break;
       }
 
-      case OpCode::DEFINE_LOCAL: {
+      case OpCode::DUP: {
+        stack.push_back(stack.back());
         break;
       }
 

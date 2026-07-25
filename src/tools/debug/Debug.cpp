@@ -112,9 +112,6 @@ size_t disassembleInstruction(const Chunk& chunk, size_t offset)
     case OpCode::SET_GLOBAL:
       return constantInstruction("SET_GLOBAL", chunk, offset);
 
-    case OpCode::DEFINE_LOCAL:
-      return simpleInstruction("DEFINE_LOCAL", offset);
-
     case OpCode::GET_LOCAL:
       return constantInstruction("GET_LOCAL", chunk, offset);
 
@@ -132,6 +129,9 @@ size_t disassembleInstruction(const Chunk& chunk, size_t offset)
 
     case OpCode::NEGATE:
       return simpleInstruction("NEGATE", offset);
+
+    case OpCode::DUP:
+      return simpleInstruction("DUP", offset);
   }
 
   std::cout << "Unknown opcode " << static_cast<int>(op) << "\n";

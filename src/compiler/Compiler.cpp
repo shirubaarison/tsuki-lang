@@ -166,7 +166,7 @@ void Compiler::compileExpr(const AssignExpr& e)
       if (symbolTable.resolveGlobal(name) == -1)
       {
         symbolTable.defineLocal(name);
-        emit(OpCode::DEFINE_LOCAL);
+        emit(OpCode::DUP);
       }
       else
       {
@@ -179,7 +179,6 @@ void Compiler::compileExpr(const AssignExpr& e)
     }
   }
 }
-
 
 void Compiler::compileExpr(const BooleanExpr& e)
 {

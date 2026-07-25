@@ -25,13 +25,13 @@ enum OpCode : uint8_t {
   DEFINE_GLOBAL,
   GET_GLOBAL,
   SET_GLOBAL,
-  DEFINE_LOCAL,
   GET_LOCAL,
   SET_LOCAL,
   JMP_IF_FALSE,
   JMP,
   LOOP,
   NEGATE,
+  DUP,
 };
 
 #endif // !OP_CODE_H
