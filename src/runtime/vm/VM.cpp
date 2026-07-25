@@ -254,6 +254,16 @@ InterpretResult VM::Machine::run() {
         break;
       }
 
+      case OpCode::NEGATE: {
+        Value& value = stack.back();
+        if (!isType<int>(value)) {
+          throw std::runtime_error("Value is not a number.");
+        }
+
+        value = -(std::get<int>(value));
+        break;
+      }
+
       case OpCode::RET:
         return InterpretResult::INTERPRET_OK;
 

@@ -213,9 +213,22 @@ void Compiler::compileExpr(const NameExpr& e)
   emit(OpCode::GET_GLOBAL, name);
 }
 
-void Compiler::compileExpr(const PrefixExpr&)
+void Compiler::compileExpr(const PrefixExpr &e)
 {
-  // not yet implemented
+  compileExpr(e.expr);
+
+  switch (e.op) {
+    case TokenType::TOKEN_BANG:
+      emit(OpCode::NOT);
+      break;
+
+    case TokenType::TOKEN_MINUS:
+      emit(OpCode::NEGATE);
+      break;
+
+    default:
+      throw std::logic_error("Unsupported prefix operator");
+  }
 }
 
 void Compiler::compileExpr(const VarExpr& e)

@@ -129,6 +129,9 @@ size_t disassembleInstruction(const Chunk& chunk, size_t offset)
 
     case OpCode::LOOP:
       return jumpInstruction("LOOP", -1, chunk, offset);
+
+    case OpCode::NEGATE:
+      return simpleInstruction("NEGATE", offset);
   }
 
   std::cout << "Unknown opcode " << static_cast<int>(op) << "\n";

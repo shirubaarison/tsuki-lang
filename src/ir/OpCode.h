@@ -31,6 +31,7 @@ enum OpCode : uint8_t {
   JMP_IF_FALSE,
   JMP,
   LOOP,
+  NEGATE,
 };
 
 #endif // !OP_CODE_H
