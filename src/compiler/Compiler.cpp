@@ -279,14 +279,12 @@ void Compiler::compileStmt(const IfStmt& s)
     s.elseBranch);
 
   size_t jumpOverElse = 0;
-  if (hasElse)
-    jumpOverElse = emitJump(OpCode::JMP);
+  jumpOverElse = emitJump(OpCode::JMP);
 
   patchJump(jumpToElse);
   emit(OpCode::POP);
 
-  if (hasElse)
-  {
+  if (hasElse) {
     compileStmt(s.elseBranch);
     patchJump(jumpOverElse);
   }
